@@ -8,8 +8,8 @@ VERSION=pre0.1
 export CC=gcc
 export CFLAGS=-std=c99 \
 	-fPIC \
-	-I$(BUILD)/include \
 	-I$(PWD)/include \
+	-I$(BUILD)/include \
 	-DNRL_VERSION=$(VERSION)
 CFLAGS_RELEASE=-O2 -w
 CFLAGS_DEBUG=-Wall -Wextra -g

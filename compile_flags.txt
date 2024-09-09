@@ -2,6 +2,6 @@
 -Wextra
 -g
 -fPIC
--Ibuild/include
 -Iinclude
+-Ibuild/include
 -std=c99
