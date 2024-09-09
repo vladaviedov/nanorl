@@ -3,7 +3,7 @@ export BUILD=$(PWD)/build
 
 # TODO: enable after first tag
 # VERSION='"$(shell git describe --tags --dirty)"'
-VERSION=pre0.1
+VERSION=v2-pre0.1
 
 export CC=gcc
 export CFLAGS=-std=c99 \

@@ -1,7 +1,7 @@
 /**
  * @file nanorl.h
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
- * @version pre0.1
+ * @version v2-pre0.1
  * @date 2024
  * @license LGPLv3.0
  * @brief Small line editing library.
@@ -13,7 +13,7 @@
 // Fallback library version
 // Normally this is set by the build system
 #ifndef NRL_VERSION
-#define NRL_VERSION "pre0.1"
+#define NRL_VERSION "v2-pre0.1"
 #endif // NRL_VERSION
 
 /**
