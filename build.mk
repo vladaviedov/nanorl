@@ -1,4 +1,5 @@
 BUILD_DIRS=$(BUILD) \
+		   $(BUILD)/include \
 		   $(BUILD)/lib \
 		   $(OBJ_DIR)
 
@@ -32,7 +33,7 @@ $(foreach build_dir, $(BUILD_DIRS), \
 
 .PHONY: headers
 headers: $(BUILD_DIRS)
-	cp -R $(PWD)/include $(BUILD)/include
+	cp -R $(PWD)/include $(BUILD)/include/nanorl
 
 $(TARGET_SHARED): $(BUILD) $(OBJS)
 	$(CC) -shared -o $@ $(OBJS) $(LDFLAGS)
