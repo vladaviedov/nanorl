@@ -108,12 +108,12 @@ typedef struct {
 char *nanorl(const nrl_config *config, nrl_error *error);
 
 /**
- * @brief GNU Readline compatible signature for nanorl.
+ * @brief Start nanorl with default settings and provided prompt.
  *
  * @param[in] prompt - Prompt message printed to the user.
  * @return Inputted line; NULL on some errors.
  */
-char *readline(const char *prompt);
+char *nrl_readline(const char *prompt);
 
 /**
  * @brief Retrieve the default configuration.
