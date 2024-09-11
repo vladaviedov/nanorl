@@ -1,0 +1,17 @@
+DOXYFILE_ENCODING      = UTF-8
+PROJECT_NAME           = "nanorl"
+PROJECT_NUMBER         =
+PROJECT_BRIEF          = Small line editing library
+PROJECT_LOGO           =
+PROJECT_ICON           =
+OUTPUT_DIRECTORY       = docs
+CREATE_SUBDIRS         = YES
+CREATE_SUBDIRS_LEVEL   = 8
+ALIASES                = "license=@par License:^^"
+OPTIMIZE_OUTPUT_FOR_C  = YES
+TIMESTAMP              = DATETIME
+INPUT                  = main_page.dox \
+                         src \
+						 include
+FILE_PATTERNS          = *.c *.h
+ENABLED_SECTIONS       = $(ENABLE)

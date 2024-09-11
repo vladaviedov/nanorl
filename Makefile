@@ -69,3 +69,15 @@ checkformat:
 .PHONY: format
 format:
 	$(FORMAT) $(FORMAT_FIX_FLAGS) $(FORMAT_FILES)
+
+# Documentation
+DOXYGEN=doxygen
+DOXYGEN_CONF=Doxyfile
+
+.PHONY: docs
+docs:
+	$(DOXYGEN) $(DOXYGEN_CONF)
+
+.PHONY: fulldocs
+fulldocs:
+	ENABLE='internal' $(DOXYGEN) $(DOXYGEN_CONF)

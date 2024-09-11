@@ -1,4 +1,5 @@
 /**
+ * @cond internal
  * @file nanorl.c
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
@@ -24,6 +25,10 @@
 
 const char *nrl_version = NRL_VERSION;
 
+/**
+ * @var default_conf
+ * Default nanorl configuration.
+ */
 static const nrl_config default_conf = {
 	.read_file = STDIN_FILENO,
 	.echo_file = STDOUT_FILENO,
@@ -47,3 +52,5 @@ char *nrl_readline(const char *prompt) {
 nrl_config nrl_default_config(void) {
 	return default_conf;
 }
+
+// @endcond

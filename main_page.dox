@@ -1,0 +1,9 @@
+/**
+ * @mainpage nanorl (nano readline)
+ *
+ * nanorl is a small line editing library for POSIX applications.
+ *
+ * API headers:
+ * - @ref nanorl.h "<nanorl/nanorl.h>"
+ * - @ref readline.h "<nanorl/readline.h>"
+ */
