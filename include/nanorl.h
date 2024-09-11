@@ -10,11 +10,11 @@
 
 #include <stdbool.h>
 
-// Fallback library version
-// Normally this is set by the build system
-#ifndef NRL_VERSION
-#define NRL_VERSION "v2-pre0.1"
-#endif // NRL_VERSION
+/**
+ * @var nrl_version
+ * nanorl library version.
+ */
+extern const char *nrl_version;
 
 /**
  * @enum nrl_echo_mode

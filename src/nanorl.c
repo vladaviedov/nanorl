@@ -12,7 +12,18 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-// Sane default nanorl config
+/**
+ * @def NRL_VERSION
+ * nanorl version, normally set by the build system.
+ *
+ * @note Fallback value is shown.
+ */
+#ifndef NRL_VERSION
+#define NRL_VERSION "v2-pre0.1"
+#endif // NRL_VERSION
+
+const char *nrl_version = NRL_VERSION;
+
 static const nrl_config default_conf = {
 	.read_file = STDIN_FILENO,
 	.echo_file = STDOUT_FILENO,
