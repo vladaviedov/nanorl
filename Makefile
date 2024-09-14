@@ -13,13 +13,14 @@ export CFLAGS=-std=c99 \
 	-DNRL_VERSION=$(VERSION)
 CFLAGS_RELEASE=-O2 -w
 CFLAGS_DEBUG=-Wall -Wextra -g
-export LDFLAGS=
+export LDFLAGS=$(TARGET_STATIC)
 
 export AR=ar
 export ARFLAGS=rvsc
 
-export TARGET_STATIC=$(BUILD)/lib/nanorl.a
-export TARGET_SHARED=$(BUILD)/lib/nanorl.so
+export TARGET_STATIC=$(BUILD)/lib/libnanorl.a
+export TARGET_SHARED=$(BUILD)/lib/libnanorl.so
+export TARGET_EXAMPLE=$(BUILD)/bin/nrl_example
 export TARGET_MAN=$(BUILD)/share/man/man3/nanorl.3.gz
 
 export OBJ_DIR=

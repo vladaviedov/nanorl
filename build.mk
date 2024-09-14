@@ -1,6 +1,7 @@
 BUILD_DIRS=$(BUILD) \
 		   $(BUILD)/include \
 		   $(BUILD)/lib \
+		   $(BUILD)/bin \
 		   $(OBJ_DIR)
 
 SUBDIRS=$(shell cd $(PWD)/src && find * -type d)
@@ -9,7 +10,7 @@ SRCS=$(shell cd $(PWD)/src && find * -type f -name '*.c')
 OBJS=$(addprefix $(OBJ_DIR)/, $(SRCS:.c=.o))
 
 .PHONY: build
-build: $(BUILD_DIRS) headers $(TARGET_STATIC) $(TARGET_SHARED)
+build: $(BUILD_DIRS) headers $(TARGET_STATIC) $(TARGET_SHARED) $(TARGET_EXAMPLE)
 
 # Templates
 define make_build_dir
@@ -40,6 +41,9 @@ $(TARGET_SHARED): $(BUILD) $(OBJS)
 
 $(TARGET_STATIC): $(BUILD) $(OBJS)
 	$(AR) $(ARFLAGS) $@ $(OBJS)
+
+$(TARGET_EXAMPLE): example/nrl_example.c $(TARGET_STATIC)
+	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
 # Build root
 $(eval $(call compile_subdir,))
