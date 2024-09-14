@@ -10,8 +10,12 @@
 #define _POSIX_C_SOURCE 200809L
 #include "nanorl.h"
 
-#include <unistd.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <unistd.h>
+
+#include "terminfo.h"
 
 /**
  * @def NRL_VERSION
@@ -39,6 +43,8 @@ static const nrl_config default_conf = {
 };
 
 char *nanorl(const nrl_config *config, nrl_error *error) {
+	printf("Terminfo load: %d\n", nrl_load_terminfo());
+
 	// TODO: implement
 	return NULL;
 }
