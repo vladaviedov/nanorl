@@ -1,3 +1,6 @@
+LIBUTILS_CONFIG=$(PWD)/lib/libutils.conf
+LIBUTILS=$(BUILD)/lib/libutils.a
+
 BUILD_DIRS=$(BUILD) \
 		   $(BUILD)/include \
 		   $(BUILD)/lib \
@@ -36,14 +39,20 @@ $(foreach build_dir, $(BUILD_DIRS), \
 headers: $(BUILD_DIRS)
 	cp -R $(PWD)/include $(BUILD)/include/nanorl
 
-$(TARGET_SHARED): $(BUILD) $(OBJS)
+$(TARGET_SHARED): $(BUILD) $(OBJS) $(LIBUTILS)
 	$(CC) -shared -o $@ $(OBJS) $(LDFLAGS)
 
-$(TARGET_STATIC): $(BUILD) $(OBJS)
+$(TARGET_STATIC): $(BUILD) $(OBJS) $(LIBUTILS)
 	$(AR) $(ARFLAGS) $@ $(OBJS)
 
 $(TARGET_EXAMPLE): example/nrl_example.c $(TARGET_STATIC)
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
+
+.PHONY: $(LIBUTILS)
+$(LIBUTILS): lib/c-utils
+	$(MAKE) -C $< $(TASK) \
+		CONFIG_PATH=$(LIBUTILS_CONFIG) \
+		BUILD=$(BUILD)
 
 # Build root
 $(eval $(call compile_subdir,))
