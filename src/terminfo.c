@@ -260,11 +260,23 @@ static bool parse(FILE *terminfo) {
 	// Lookup all relevant capability
 	for (uint32_t i = 0; i < TII_COUNT; i++) {
 		int16_t offset = strings[input_seq_indices[i]];
-		inputs[i] = (offset < 0) ? NULL : (strings_table + offset);
+		char *sequence = (offset < 0) ? NULL : (strings_table + offset);
+
+		if (sequence == NULL || strlen(sequence) == 0) {
+			inputs[i] = NULL;
+		} else {
+			inputs[i] = strdup(sequence);
+		}
 	}
 	for (uint32_t i = 0; i < TIO_COUNT; i++) {
 		int16_t offset = strings[output_seq_indices[i]];
-		outputs[i] = (offset < 0) ? NULL : (strings_table + offset);
+		char *sequence = (offset < 0) ? NULL : (strings_table + offset);
+
+		if (sequence == NULL || strlen(sequence) == 0) {
+			outputs[i] = NULL;
+		} else {
+			outputs[i] = strdup(sequence);
+		}
 	}
 
 	return true;
