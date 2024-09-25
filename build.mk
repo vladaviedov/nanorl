@@ -1,6 +1,8 @@
 LIBUTILS_CONFIG=$(PWD)/lib/libutils.conf
 LIBUTILS=$(BUILD)/lib/libutils.a
 
+LDFLAGS=$(LIBUTILS)
+
 BUILD_DIRS=$(BUILD) \
 		   $(BUILD)/include \
 		   $(BUILD)/lib \
@@ -10,7 +12,7 @@ BUILD_DIRS=$(BUILD) \
 SUBDIRS=$(shell cd $(PWD)/src && find * -type d)
 MKSUBDIRS=$(addprefix $(OBJ_DIR)/, $(SUBDIRS))
 SRCS=$(shell cd $(PWD)/src && find * -type f -name '*.c')
-OBJS=$(addprefix $(OBJ_DIR)/, $(SRCS:.c=.o))
+OBJS=$(addprefix $(OBJ_DIR)/nanorl_, $(SRCS:.c=.o))
 
 .PHONY: build
 build: $(BUILD_DIRS) headers $(TARGET_STATIC) $(TARGET_SHARED) $(TARGET_EXAMPLE)
@@ -27,7 +29,7 @@ $(OBJ_DIR)/$(1): $(BUILD)
 endef
 
 define compile_subdir
-$(OBJ_DIR)/$(1)%.o: $(PWD)/src/$(1)%.c $(MKSUBDIRS)
+$(OBJ_DIR)/nanorl_$(1)%.o: $(PWD)/src/$(1)%.c $(MKSUBDIRS) $(LIBUTILS)
 	$$(CC) $$(CFLAGS) -c -o $$@ $$<
 endef
 
@@ -42,9 +44,13 @@ headers: $(BUILD_DIRS)
 $(TARGET_SHARED): $(BUILD) $(OBJS) $(LIBUTILS)
 	$(CC) -shared -o $@ $(OBJS) $(LDFLAGS)
 
-$(TARGET_STATIC): $(BUILD) $(OBJS) $(LIBUTILS)
+$(TARGET_STATIC_IM): $(BUILD) $(OBJS)
 	$(AR) $(ARFLAGS) $@ $(OBJS)
 
+$(TARGET_STATIC): $(TARGET_STATIC_IM) $(LIBUTILS)
+	./repack.sh $(OBJ_DIR) $@ $^
+
+$(TARGET_EXAMPLE): LDFLAGS=$(TARGET_STATIC)
 $(TARGET_EXAMPLE): example/nrl_example.c $(TARGET_STATIC)
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
