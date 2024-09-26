@@ -11,8 +11,8 @@
 
 #include <stdbool.h>
 
-#include "terminfo.h"
 #include "config.h"
+#include "terminfo.h"
 
 /**
  * @brief Build an escape sequence DFA from terminfo data.
