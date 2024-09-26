@@ -12,6 +12,7 @@
 #include <stdbool.h>
 
 #include "terminfo.h"
+#include "config.h"
 
 /**
  * @brief Build an escape sequence DFA from terminfo data.
@@ -27,5 +28,12 @@ void nrl_dfa_build(void);
  *         false - Nothing was matched.
  */
 bool nrl_dfa_parse(char (*next_char)(), terminfo_input *accept_buf);
+
+#if DFA_DEBUG == 1
+/**
+ * @brief Print DFA tree to standard out.
+ */
+void nrl_dfa_print(void);
+#endif // DEBUG
 
 // @endcond

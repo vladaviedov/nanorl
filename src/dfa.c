@@ -102,6 +102,34 @@ parse_next:
 	}
 }
 
+#if DFA_DEBUG == 1
+#include <stdio.h>
+
+void print_helper(const dfa_node *node, uint32_t indent) {
+	for (uint32_t i = 0; i < indent; i++) {
+		printf("    ");
+	}
+
+	if (node->edge == 0) {
+		printf("Root");
+	} else if (node->edge < 0x20) {
+		printf("^%c", node->edge + 0x40);
+	} else {
+		printf("%c", node->edge);
+	}
+
+	printf("\n");
+
+	for (uint32_t i = 0; i < node->children_count; i++) {
+		print_helper(&node->value.children[i], indent + 1);
+	}
+}
+
+void nrl_dfa_print(void) {
+	print_helper(&root, 0);
+}
+#endif
+
 /**
  * @brief Insert a new sequence into the DFA tree.
  *

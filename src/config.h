@@ -25,4 +25,8 @@
 #define TERMINFO_COMMON 1
 #endif // TERMINFO_COMMON
 
+#ifndef DFA_DEBUG
+#define DFA_DEBUG 0
+#endif // DFA_DEBUG
+
 // @endcond
