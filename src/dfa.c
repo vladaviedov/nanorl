@@ -149,8 +149,9 @@ static void dfa_insert(const char *sequence, terminfo_input accept_value) {
 			}
 		}
 
-		current->value.children = realloc(current->value.children,
-			(current->children_count + 1) * sizeof(dfa_node));
+		current->value.children
+			= realloc(current->value.children,
+					  (current->children_count + 1) * sizeof(dfa_node));
 		dfa_node *child = current->value.children + current->children_count;
 		current->children_count++;
 

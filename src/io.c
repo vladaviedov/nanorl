@@ -150,8 +150,8 @@ static char io_next_char(void) {
 		rd_count = rd_pending;
 		rd_used = 0;
 
-		ssize_t bytes = read_wrapper(
-			read_file, rd_buf + rd_count, IO_BUF_SIZE - rd_count);
+		ssize_t bytes = read_wrapper(read_file, rd_buf + rd_count,
+									 IO_BUF_SIZE - rd_count);
 		rd_count += bytes;
 	}
 
