@@ -58,12 +58,14 @@ input_type nrl_io_read(input_buf *buffer) {
 	if (nrl_dfa_parse(&io_next_char, &buffer->escape)) {
 		rd_used += rd_pending;
 		rd_pending = 0;
+		buffer->more = (rd_used < rd_count);
 
 		return INPUT_ESCAPE;
 	}
 
 	rd_pending = 0;
 	char ascii = rd_buf[rd_used++];
+	buffer->more = (rd_used < rd_count);
 
 	// Check for stop conditions (newline and EOF)
 	if (ascii == '\n' || ascii == CHAR_EOT) {

@@ -57,12 +57,16 @@ typedef enum {
  *
  * @var input_buf::length
  * Length of data in the text array.
+ *
+ * @var input_buf::more
+ * Flag for whether there is more input in the buffer currently.
  */
 typedef struct {
 	terminfo_input escape;
 	bool eof;
 	char text[SINGLE_BUF_SIZE];
 	uint32_t length;
+	bool more;
 } input_buf;
 
 /**
