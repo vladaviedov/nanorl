@@ -10,6 +10,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include "io.h"
 
+#include <assert.h>
 #include <stdint.h>
 #include <string.h>
 #include <unistd.h>
@@ -102,6 +103,8 @@ bool nrl_io_write(const char *data, uint32_t length) {
 }
 
 bool nrl_io_flush(void) {
+	assert(echo_file != -1);
+
 	if (wr_count == 0) {
 		return true;
 	}
@@ -164,6 +167,8 @@ static char io_next_char(void) {
  * @return Actual amount of bytes read.
  */
 static ssize_t read_wrapper(int fd, void *buf, size_t count) {
+	assert(read_file != -1);
+
 	if (preload_data != NULL) {
 		uint32_t remaining = strlen(preload_data);
 
