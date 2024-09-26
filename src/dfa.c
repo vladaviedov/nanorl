@@ -90,11 +90,15 @@ bool nrl_dfa_parse(char (*next_char)(), terminfo_input *accept_buf) {
 				}
 
 				trav = child;
-				continue;
+				goto parse_next;
 			}
 		}
 
 		return false;
+
+		// For breaking out of inner for loop
+parse_next:
+		continue;
 	}
 }
 
@@ -113,7 +117,7 @@ static void dfa_insert(const char *sequence, terminfo_input accept_value) {
 			dfa_node *child = current->value.children + i;
 			if (child->edge == edge) {
 				current = child;
-				continue;
+				goto insert_next;
 			}
 		}
 
@@ -126,6 +130,10 @@ static void dfa_insert(const char *sequence, terminfo_input accept_value) {
 		child->value.children = NULL;
 		child->children_count = 0;
 		current = child;
+
+		// For breaking out of inner for loop
+insert_next:
+		continue;
 	}
 
 	current->value.accept = accept_value;
