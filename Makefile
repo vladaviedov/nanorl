@@ -27,6 +27,7 @@ export OBJ_DIR=
 export TASK=
 
 BUILD_MK=$(PWD)/build.mk
+TEST_MK=$(PWD)/test.mk
 PREFIX?=/usr
 MAN_SRC=
 
@@ -44,6 +45,10 @@ debug: CFLAGS+=$(CFLAGS_DEBUG)
 debug: OBJ_DIR=$(BUILD)/objd
 debug:
 	$(MAKE) -f $(BUILD_MK)
+
+.PHONY: test
+test:
+	$(MAKE) -f $(TEST_MK)
 
 .PHONY: install
 install:
