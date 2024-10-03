@@ -1,0 +1,6 @@
+-Wall
+-Wextra
+-g
+-I../build/include
+-I../lib/fff
+-std=c++14
