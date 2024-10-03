@@ -29,7 +29,8 @@ int main(void) {
 
 	// Preload
 	config.echo_mode = NRL_ECHO_ON;
-	config.preload = "value";
+	config.prompt = "edit this text: ";
+	config.preload = "hello world";
 	input = nanorl(&config, NULL);
 	printf("You typed: %s\n\n", input);
 	free(input);
