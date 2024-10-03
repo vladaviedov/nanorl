@@ -80,13 +80,13 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 	line_data line = {
 		.buffer = vec_init(sizeof(char)),
 		.cursor = 0,
+		.render_cursor = 0,
 		.dirty = false,
 	};
 
 	input_type read_res;
 	input_buf read_buf;
 	while ((read_res = nrl_io_read(&read_buf)) != INPUT_STOP) {
-		uint32_t rendered_curs = line.cursor;
 		uint32_t rendered_count = line.buffer.count;
 
 		switch (read_res) {
@@ -103,7 +103,7 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 		// Perform a full re-render
 		if (!read_buf.more && line.dirty) {
 			// Move cursor to the beginning
-			for (uint32_t i = 0; i < rendered_curs; i++) {
+			for (uint32_t i = 0; i < line.render_cursor; i++) {
 				nrl_io_write_escape(TIO_CURSOR_LEFT);
 			}
 
@@ -129,6 +129,7 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 			}
 
 			line.dirty = false;
+			line.render_cursor = line.cursor;
 		}
 
 		nrl_io_flush();

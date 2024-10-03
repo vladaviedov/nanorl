@@ -24,7 +24,10 @@
  * Resizable character buffer.
  *
  * @var line_data::cursor
- * Current cursor placement.
+ * Current virtual cursor placement.
+ *
+ * @var line_data::render_cursor
+ * Current real cursor placement.
  *
  * @var line_data::dirty
  * Set when line is modified: memory and screen are out of sync.
@@ -32,6 +35,7 @@
 typedef struct {
 	vector buffer;
 	uint32_t cursor;
+	uint32_t render_cursor;
 	bool dirty;
 } line_data;
 

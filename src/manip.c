@@ -74,6 +74,7 @@ static void escape_backspace(line_data *line) {
 static void escape_left(line_data *line) {
 	if (line->cursor > 0) {
 		line->cursor--;
+		line->render_cursor--;
 		nrl_io_write_escape(TIO_CURSOR_LEFT);
 	}
 }
@@ -81,6 +82,7 @@ static void escape_left(line_data *line) {
 static void escape_right(line_data *line) {
 	if (line->cursor < line->buffer.count) {
 		line->cursor++;
+		line->render_cursor++;
 		nrl_io_write_escape(TIO_CURSOR_RIGHT);
 	}
 }
@@ -102,6 +104,7 @@ static void escape_home(line_data *line) {
 	}
 
 	line->cursor = 0;
+	line->render_cursor = 0;
 }
 
 static void escape_end(line_data *line) {
@@ -110,6 +113,7 @@ static void escape_end(line_data *line) {
 	}
 
 	line->cursor = line->buffer.count;
+	line->render_cursor = line->buffer.count;
 }
 
 // @endcond
