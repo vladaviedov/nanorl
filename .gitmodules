@@ -1,3 +1,6 @@
 [submodule "lib/c-utils"]
 	path = lib/c-utils
 	url = https://github.com/vladaviedov/c-utils
+[submodule "lib/fff"]
+	path = lib/fff
+	url = https://github.com/meekrosoft/fff.git
