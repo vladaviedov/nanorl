@@ -104,6 +104,17 @@ bool nrl_io_write(const char *data, uint32_t length) {
 	return true;
 }
 
+bool nrl_io_write_escape(terminfo_output escape) {
+	const char *as_text = nrl_lookup_output(escape);
+
+	// Not supported: skip
+	if (as_text == NULL) {
+		return true;
+	}
+
+	return nrl_io_write(as_text, strlen(as_text));
+}
+
 bool nrl_io_flush(void) {
 	assert(echo_file != -1);
 

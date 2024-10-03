@@ -97,6 +97,13 @@ input_type nrl_io_read(input_buf *buffer);
 bool nrl_io_write(const char *data, uint32_t length);
 
 /**
+ * @brief Send escape sequence to the output.
+ *
+ * @param[in] escape - Escape sequence identifier.
+ */
+bool nrl_io_write_escape(terminfo_output escape);
+
+/**
  * @brief Send buffered data to echo file.
  *
  * @return Whether write succeeded.

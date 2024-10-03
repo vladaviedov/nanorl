@@ -65,7 +65,6 @@ static const nrl_config default_conf = {
 static bool check_args(const nrl_config *config);
 static bool init(const nrl_config *config);
 static bool deinit(const nrl_config *config);
-static bool write_escape(terminfo_output escape);
 
 char *nanorl(const nrl_config *config, nrl_error *error) {
 	if (!check_args(config)) {
@@ -174,7 +173,7 @@ static bool init(const nrl_config *config) {
 
 	nrl_io_init(config->read_file, config->echo_file, config->preload);
 	if (!config->assume_smkx) {
-		return write_escape(TIO_KEYPAD_XMIT);
+		return nrl_io_write_escape(TIO_KEYPAD_XMIT);
 	}
 
 	return true;
@@ -189,26 +188,13 @@ static bool deinit(const nrl_config *config) {
 
 	// TODO: sigaction
 
-	if (!write_escape(TIO_KEYPAD_LOCAL)) {
+	if (!nrl_io_write("\n", 1)) {
+		return false;
+	}
+	if (!nrl_io_write_escape(TIO_KEYPAD_LOCAL)) {
 		return false;
 	}
 	return nrl_io_flush();
-}
-
-/**
- * @brief Send escape sequence to the echo file.
- *
- * @param[in] escape - Escape sequence identifier.
- */
-static bool write_escape(terminfo_output escape) {
-	const char *as_text = nrl_lookup_output(escape);
-
-	// Not supported: skip
-	if (as_text == NULL) {
-		return true;
-	}
-
-	return nrl_io_write(as_text, strlen(as_text));
 }
 
 // @endcond
