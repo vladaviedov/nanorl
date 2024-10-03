@@ -23,6 +23,7 @@
 
 #include "dfa.h"
 #include "io.h"
+#include "manip.h"
 #include "terminfo.h"
 
 /**
@@ -94,6 +95,51 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 		.dirty = false,
 	};
 
+	input_type read_res;
+	input_buf read_buf;
+	while ((read_res = nrl_io_read(&read_buf)) != INPUT_STOP) {
+		uint32_t rendered_curs = line.cursor;
+		uint32_t rendered_count = line.buffer.count;
+
+		switch (read_res) {
+		case INPUT_ASCII:
+			nrl_manip_insert_ascii(&line, read_buf.text, read_buf.length);
+			break;
+		case INPUT_ESCAPE:
+			nrl_manip_eval_escape(&line, read_buf.escape);
+			break;
+		default:
+			break;
+		}
+
+		// Perform a full re-render
+		if (!read_buf.more && line.dirty) {
+			// Move cursor to the beginning
+			for (uint32_t i = 0; i < rendered_curs; i++) {
+				nrl_io_write_escape(TIO_CURSOR_LEFT);
+			}
+
+			// Print line data
+			nrl_io_write(line.buffer.data, line.buffer.count);
+			uint32_t printed_count = line.buffer.count;
+
+			// Account for erased characters
+			for (uint32_t i = line.buffer.count; i < rendered_count; i++) {
+				nrl_io_write(" ", 1);
+				printed_count++;
+			}
+
+			// Move cursor to correct location
+			for (uint32_t i = printed_count; i > line.cursor; i--) {
+				nrl_io_write_escape(TIO_CURSOR_LEFT);
+			}
+
+			line.dirty = false;
+		}
+
+		nrl_io_flush();
+	}
+
 	if (!deinit(config)) {
 		vec_deinit(&line.buffer);
 		safe_assign(error, NRL_ERROR_SYSTEM);
@@ -105,6 +151,10 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 		safe_assign(error, NRL_ERROR_EOF);
 		return NULL;
 	}
+
+	// Terminate string
+	char null_char = '\0';
+	vec_push(&line.buffer, &null_char);
 
 	safe_assign(error, NRL_ERROR_OK);
 	return vec_collect(&line.buffer);
@@ -187,6 +237,11 @@ static bool deinit(const nrl_config *config) {
 	}
 
 	// TODO: sigaction
+
+	// Delete secure data remains
+	if (config->echo_mode != NRL_ECHO_ON) {
+		nrl_io_wipe_buffers();
+	}
 
 	if (!nrl_io_write("\n", 1)) {
 		return false;
