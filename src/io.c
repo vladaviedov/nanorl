@@ -33,6 +33,7 @@ static char wr_buf[IO_BUF_SIZE];
 static uint32_t wr_count = 0;
 
 static const char *preload_data = NULL;
+static bool echo_enabled = false;
 
 static char io_next_char(void);
 static ssize_t read_wrapper(int fd, void *buf, size_t count);
@@ -86,6 +87,10 @@ input_type nrl_io_read(input_buf *buffer) {
 }
 
 bool nrl_io_write(const char *data, uint32_t length) {
+	if (!echo_enabled) {
+		return true;
+	}
+
 	// Will overflow buffer
 	if (wr_count + length > IO_BUF_SIZE) {
 		if (!nrl_io_flush()) {
@@ -133,6 +138,10 @@ bool nrl_io_flush(void) {
 void nrl_io_wipe_buffers(void) {
 	memset(rd_buf, 0, IO_BUF_SIZE);
 	memset(wr_buf, 0, IO_BUF_SIZE);
+}
+
+void nrl_io_echo_state(bool enabled) {
+	echo_enabled = enabled;
 }
 
 /**

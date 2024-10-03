@@ -115,4 +115,11 @@ bool nrl_io_flush(void);
  */
 void nrl_io_wipe_buffers(void);
 
+/**
+ * @brief Enables or disabled echo.
+ *
+ * @param[in] enabled - If echo should be enabled.
+ */
+void nrl_io_echo_state(bool enabled);
+
 // @endcond

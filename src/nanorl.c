@@ -77,18 +77,6 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 		return NULL;
 	}
 
-	// Write prompt, if there is one
-	if (config->prompt != NULL) {
-		if (!nrl_io_write(config->prompt, strlen(config->prompt))) {
-			safe_assign(error, NRL_ERROR_SYSTEM);
-			return NULL;
-		}
-	}
-	if (!nrl_io_flush()) {
-		safe_assign(error, NRL_ERROR_SYSTEM);
-		return NULL;
-	}
-
 	line_data line = {
 		.buffer = vec_init(sizeof(char)),
 		.cursor = 0,
@@ -120,7 +108,13 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 			}
 
 			// Print line data
-			nrl_io_write(line.buffer.data, line.buffer.count);
+			if (config->echo_mode == NRL_ECHO_OBSCURED) {
+				for (uint32_t i = 0; i < line.buffer.count; i++) {
+					nrl_io_write("*", 1);
+				}
+			} else {
+				nrl_io_write(line.buffer.data, line.buffer.count);
+			}
 			uint32_t printed_count = line.buffer.count;
 
 			// Account for erased characters
@@ -221,12 +215,23 @@ static bool init(const nrl_config *config) {
 
 	// TODO: sigaction
 
+	nrl_io_echo_state(true);
 	nrl_io_init(config->read_file, config->echo_file, config->preload);
 	if (!config->assume_smkx) {
-		return nrl_io_write_escape(TIO_KEYPAD_XMIT);
+		if (!nrl_io_write_escape(TIO_KEYPAD_XMIT)) {
+			return false;
+		}
 	}
 
-	return true;
+	// Write prompt, if there is one
+	if (config->prompt != NULL) {
+		if (!nrl_io_write(config->prompt, strlen(config->prompt))) {
+			return false;
+		}
+	}
+
+	nrl_io_echo_state(config->echo_mode != NRL_ECHO_OFF);
+	return nrl_io_flush();
 }
 
 static bool deinit(const nrl_config *config) {
@@ -243,6 +248,7 @@ static bool deinit(const nrl_config *config) {
 		nrl_io_wipe_buffers();
 	}
 
+	nrl_io_echo_state(true);
 	if (!nrl_io_write("\n", 1)) {
 		return false;
 	}
