@@ -9,6 +9,8 @@
 const char *err_to_string(nrl_error err);
 
 int main(void) {
+	printf("nanorl version: %s\n\n", nrl_version);
+
 	nrl_config config = nrl_default_config();
 	nrl_error error;
 	config.prompt = "enter something: ";
