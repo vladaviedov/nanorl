@@ -152,16 +152,22 @@ void nrl_io_echo_state(bool enabled) {
 static char io_next_char(void) {
 	// No characters in buffer: read in more
 	if (rd_used == rd_count) {
+		// Reset counters
+		rd_used = 0;
+		rd_pending = 0;
+
 		ssize_t bytes = read_wrapper(read_file, rd_buf, IO_BUF_SIZE);
 
-		// Read error or file closed
+		// Read error: place an eof character
 		if (bytes <= 0) {
+			rd_buf[0] = CHAR_EOT;
+			rd_count = 1;
+
 			return CHAR_EOT;
 		}
 
+		// All good otherwise
 		rd_count = bytes;
-		rd_used = 0;
-		rd_pending = 0;
 	}
 
 	// End of buffer reached, but DFA parse is in progress

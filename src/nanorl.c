@@ -11,6 +11,8 @@
 #include "nanorl.h"
 
 #include <assert.h>
+#include <errno.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -46,6 +48,24 @@ const char *nrl_version = NRL_VERSION;
 static struct termios old_attrs;
 
 /**
+ * @var old_sighup_sa
+ * @var old_sigint_sa
+ * @var old_sigterm_sa
+ * @var old_sigquit_sa
+ * Stored original signal handlers.
+ */
+static struct sigaction old_sighup_sa;
+static struct sigaction old_sigint_sa;
+static struct sigaction old_sigterm_sa;
+static struct sigaction old_sigquit_sa;
+
+/**
+ * @var intr_code
+ * Storage for signal numbers receieved.
+ */
+static int intr_code;
+
+/**
  * @var default_conf
  * Default nanorl configuration.
  */
@@ -63,11 +83,14 @@ static const nrl_config default_conf = {
 		*var_ptr = val;                                                        \
 	}
 
+static void sig_handle(int code);
 static bool check_args(const nrl_config *config);
 static bool init(const nrl_config *config);
 static bool deinit(const nrl_config *config);
 
 char *nanorl(const nrl_config *config, nrl_error *error) {
+	errno = 0;
+
 	if (!check_args(config)) {
 		safe_assign(error, NRL_ERROR_ARG);
 		return NULL;
@@ -141,17 +164,24 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 		return NULL;
 	}
 
+	// Terminate string
+	char null_char = '\0';
+	vec_push(&line.buffer, &null_char);
+
+	// EOF condition
 	if (read_buf.eof && line.buffer.count == 0) {
 		vec_deinit(&line.buffer);
 		safe_assign(error, NRL_ERROR_EOF);
 		return NULL;
 	}
 
-	// Terminate string
-	char null_char = '\0';
-	vec_push(&line.buffer, &null_char);
+	// Interrupt condition
+	if (errno == EINTR) {
+		safe_assign(error, NRL_ERROR_INTERRUPT);
+	} else {
+		safe_assign(error, NRL_ERROR_OK);
+	}
 
-	safe_assign(error, NRL_ERROR_OK);
 	return vec_collect(&line.buffer);
 }
 
@@ -163,6 +193,15 @@ char *nrl_readline(const char *prompt) {
 
 nrl_config nrl_default_config(void) {
 	return default_conf;
+}
+
+/**
+ * @brief Signal handler for all signals.
+ *
+ * @param[in] code - Signal code.
+ */
+static void sig_handle(int code) {
+	intr_code = code;
 }
 
 /**
@@ -214,8 +253,20 @@ static bool init(const nrl_config *config) {
 		}
 	}
 
-	// TODO: sigaction
+	// Setup signals
+	struct sigaction nrl_sa;
+	sigemptyset(&nrl_sa.sa_mask);
+	nrl_sa.sa_flags = 0;
+	nrl_sa.sa_handler = &sig_handle;
 
+	if (sigaction(SIGHUP, &nrl_sa, &old_sighup_sa) < 0
+		|| sigaction(SIGINT, &nrl_sa, &old_sigint_sa) < 0
+		|| sigaction(SIGTERM, &nrl_sa, &old_sigterm_sa) < 0
+		|| sigaction(SIGQUIT, &nrl_sa, &old_sigquit_sa) < 0) {
+		return false;
+	}
+
+	// IO initialization
 	nrl_io_echo_state(true);
 	nrl_io_init(config->read_file, config->echo_file, config->preload);
 	if (!config->assume_smkx) {
@@ -242,7 +293,13 @@ static bool deinit(const nrl_config *config) {
 		}
 	}
 
-	// TODO: sigaction
+	// Reset signals
+	if (sigaction(SIGHUP, &old_sighup_sa, NULL) < 0
+		|| sigaction(SIGINT, &old_sigint_sa, NULL) < 0
+		|| sigaction(SIGTERM, &old_sigterm_sa, NULL) < 0
+		|| sigaction(SIGQUIT, &old_sigquit_sa, NULL) < 0) {
+		return false;
+	}
 
 	// Delete secure data remains
 	if (config->echo_mode != NRL_ECHO_ON) {
