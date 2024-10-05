@@ -164,16 +164,16 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 		return NULL;
 	}
 
-	// Terminate string
-	char null_char = '\0';
-	vec_push(&line.buffer, &null_char);
-
 	// EOF condition
 	if (read_buf.eof && line.buffer.count == 0) {
 		vec_deinit(&line.buffer);
 		safe_assign(error, NRL_ERROR_EOF);
 		return NULL;
 	}
+
+	// Terminate string
+	char null_char = '\0';
+	vec_push(&line.buffer, &null_char);
 
 	// Interrupt condition
 	if (errno == EINTR) {
