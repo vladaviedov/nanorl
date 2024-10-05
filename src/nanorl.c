@@ -42,31 +42,22 @@
 const char *nrl_version = NRL_VERSION;
 
 /**
- * @var old_attrs
  * Stored original termios settings for restoration.
  */
 static struct termios old_attrs;
 
-/**
- * @var old_sighup_sa
- * @var old_sigint_sa
- * @var old_sigterm_sa
- * @var old_sigquit_sa
- * Stored original signal handlers.
- */
+// Stored signal handlers
 static struct sigaction old_sighup_sa;
 static struct sigaction old_sigint_sa;
 static struct sigaction old_sigterm_sa;
 static struct sigaction old_sigquit_sa;
 
 /**
- * @var intr_code
  * Storage for signal numbers receieved.
  */
 static int intr_code;
 
 /**
- * @var default_conf
  * Default nanorl configuration.
  */
 static const nrl_config default_conf = {
@@ -286,6 +277,13 @@ static bool init(const nrl_config *config) {
 	return nrl_io_flush();
 }
 
+/**
+ * @brief Perform library teardown.
+ *
+ * @param[in] config - Configuration.
+ * @return true - Successful teardown. \n
+ *         false - Teardown failed.
+ */
 static bool deinit(const nrl_config *config) {
 	if (isatty(config->read_file)) {
 		if (tcsetattr(config->read_file, TCSAFLUSH, &old_attrs) < 0) {

@@ -15,3 +15,4 @@ INPUT                  = main_page.dox \
 						 include
 FILE_PATTERNS          = *.c *.h
 ENABLED_SECTIONS       = $(ENABLE)
+EXTRACT_STATIC         = YES
