@@ -17,6 +17,7 @@
 #include <string.h>
 
 #include "config.h"
+#include "fastload.h"
 
 /**
  * @def MAGIC_INT16
@@ -89,8 +90,8 @@ static const uint8_t output_seq_indices[] = {
 static bool attempted_load = false;
 static bool load_result = false;
 
-static const char *inputs[TII_COUNT] = { NULL };
-static const char *outputs[TIO_COUNT] = { NULL };
+static char *inputs[TII_COUNT] = { NULL };
+static char *outputs[TIO_COUNT] = { NULL };
 
 static FILE *find_entry(const char *term);
 static FILE *try_open(const char *db_path, const char *term);
@@ -110,7 +111,9 @@ bool nrl_load_terminfo(void) {
 	}
 
 #if FASTLOAD == 1
-	// TODO: fastload
+	if (strstr(env_term, "xterm")) {
+		nrl_fl_xterm((char **)&inputs, (char **)&outputs);
+	}
 #endif // FASTLOAD
 
 	FILE *terminfo = find_entry(env_term);

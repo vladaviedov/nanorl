@@ -29,4 +29,8 @@
 #define DFA_DEBUG 0
 #endif // DFA_DEBUG
 
+#ifndef FASTLOAD
+#define FASTLOAD 1
+#endif // FASTLOAD
+
 // @endcond
