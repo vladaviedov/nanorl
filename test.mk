@@ -1,6 +1,6 @@
 CXX=g++
-CXX_FLAGS=-Wall -Wextra -g -std=c++14 -fprofile-arcs -ftest-coverage -I$(BUILD)/include
-LDFLAGS=-lpthread -lgtest -lgtest_main -lgcov
+CXX_FLAGS=-Wall -Wextra -g -std=c++14 -I$(BUILD)/include
+LDFLAGS=-lpthread -lgtest -lgtest_main
 
 COV_DIR=cov
 
