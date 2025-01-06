@@ -36,7 +36,7 @@ static const char *preload_data = NULL;
 static bool echo_enabled = false;
 
 static char io_next_char(void);
-static ssize_t read_wrapper(int fd, void *buf, size_t count);
+static ssize_t read_wrapper(int fd, char *buf, size_t count);
 static bool parse_ascii_control(char ascii, input_buf *buffer);
 
 void nrl_io_init(int read_fd, int echo_fd, const char *preload) {
@@ -62,6 +62,12 @@ input_type nrl_io_read(input_buf *buffer) {
 		buffer->more = (rd_used < rd_count);
 
 		return INPUT_ESCAPE;
+	}
+
+	// This should only happen here if TERM is unset
+	if (rd_count == rd_used) {
+		rd_count = read_wrapper(read_file, rd_buf, IO_BUF_SIZE);
+		rd_used = 0;
 	}
 
 	rd_pending = 0;
@@ -156,18 +162,8 @@ static char io_next_char(void) {
 		rd_used = 0;
 		rd_pending = 0;
 
-		ssize_t bytes = read_wrapper(read_file, rd_buf, IO_BUF_SIZE);
-
-		// Read error: place an eof character
-		if (bytes <= 0) {
-			rd_buf[0] = CHAR_EOT;
-			rd_count = 1;
-
-			return CHAR_EOT;
-		}
-
-		// All good otherwise
-		rd_count = bytes;
+		// Read in buffer
+		rd_count = read_wrapper(read_file, rd_buf, IO_BUF_SIZE);
 	}
 
 	// End of buffer reached, but DFA parse is in progress
@@ -194,8 +190,9 @@ static char io_next_char(void) {
  * @param[in] count - Max size to read.
  * @return Actual amount of bytes read.
  */
-static ssize_t read_wrapper(int fd, void *buf, size_t count) {
+static ssize_t read_wrapper(int fd, char *buf, size_t count) {
 	assert(read_file != -1);
+	assert(count > 0);
 
 	if (preload_data != NULL) {
 		uint32_t remaining = strlen(preload_data);
@@ -211,7 +208,16 @@ static ssize_t read_wrapper(int fd, void *buf, size_t count) {
 		}
 	}
 
-	return read(fd, buf, count);
+	ssize_t bytes = read(fd, buf, count);
+
+	// Read error: place an eof character
+	if (bytes <= 0) {
+		buf[0] = CHAR_EOT;
+		return 1;
+	}
+
+	// All good otherwise
+	return bytes;
 }
 
 /**
