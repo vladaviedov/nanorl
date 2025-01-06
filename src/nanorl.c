@@ -224,9 +224,11 @@ static bool check_args(const nrl_config *config) {
  */
 static bool init(const nrl_config *config) {
 	if (!nrl_load_terminfo()) {
-		return false;
+		fprintf(stderr,
+				"[nanorl] warning: unable to parse terminal information\n");
+	} else {
+		nrl_dfa_build();
 	}
-	nrl_dfa_build();
 
 #if DFA_DEBUG == 1
 	nrl_dfa_print();

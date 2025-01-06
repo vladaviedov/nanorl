@@ -106,7 +106,7 @@ bool nrl_load_terminfo(void) {
 
 	const char *env_term = getenv("TERM");
 	if (env_term == NULL) {
-		// TODO: warning
+		fprintf(stderr, "[nanorl] warning: $TERM is not set\n");
 		return false;
 	}
 
