@@ -133,6 +133,10 @@ const char *nrl_lookup_output(terminfo_output id) {
 	return outputs[id];
 }
 
+bool nrl_cursor_capability(void) {
+	return outputs[TII_KEY_LEFT] != NULL && outputs[TII_KEY_RIGHT] != NULL;
+}
+
 /** Static */
 
 /**

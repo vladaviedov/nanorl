@@ -73,4 +73,12 @@ const char *nrl_lookup_input(terminfo_input id);
  */
 const char *nrl_lookup_output(terminfo_output id);
 
+/**
+ * @brief Check the cursor movement is availiable on this terminal.
+ *
+ * @return true - Can move cursor.\n
+ *         false - Cannot move cursor.
+ */
+bool nrl_cursor_capability(void);
+
 // @endcond

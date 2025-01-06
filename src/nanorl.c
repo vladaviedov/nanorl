@@ -97,6 +97,7 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 		.render_cursor = 0,
 		.dirty = false,
 	};
+	bool cursor_cap = nrl_cursor_capability();
 
 	input_type read_res;
 	input_buf read_buf;
@@ -116,30 +117,36 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 
 		// Perform a full re-render
 		if (!read_buf.more && line.dirty) {
-			// Move cursor to the beginning
-			for (uint32_t i = 0; i < line.render_cursor; i++) {
-				nrl_io_write_escape(TIO_CURSOR_LEFT);
-			}
-
-			// Print line data
-			if (config->echo_mode == NRL_ECHO_OBSCURED) {
-				for (uint32_t i = 0; i < line.buffer.count; i++) {
-					nrl_io_write("*", 1);
-				}
+			if (!cursor_cap) {
+				// On dumb terminals, only echo the unprinted chars
+				nrl_io_write(line.buffer.data + line.render_cursor,
+							 line.cursor - line.render_cursor);
 			} else {
-				nrl_io_write(line.buffer.data, line.buffer.count);
-			}
-			uint32_t printed_count = line.buffer.count;
+				// Move cursor to the beginning
+				for (uint32_t i = 0; i < line.render_cursor; i++) {
+					nrl_io_write_escape(TIO_CURSOR_LEFT);
+				}
 
-			// Account for erased characters
-			for (uint32_t i = line.buffer.count; i < rendered_count; i++) {
-				nrl_io_write(" ", 1);
-				printed_count++;
-			}
+				// Print line data
+				if (config->echo_mode == NRL_ECHO_OBSCURED) {
+					for (uint32_t i = 0; i < line.buffer.count; i++) {
+						nrl_io_write("*", 1);
+					}
+				} else {
+					nrl_io_write(line.buffer.data, line.buffer.count);
+				}
+				uint32_t printed_count = line.buffer.count;
 
-			// Move cursor to correct location
-			for (uint32_t i = printed_count; i > line.cursor; i--) {
-				nrl_io_write_escape(TIO_CURSOR_LEFT);
+				// Account for erased characters
+				for (uint32_t i = line.buffer.count; i < rendered_count; i++) {
+					nrl_io_write(" ", 1);
+					printed_count++;
+				}
+
+				// Move cursor to correct location
+				for (uint32_t i = printed_count; i > line.cursor; i--) {
+					nrl_io_write_escape(TIO_CURSOR_LEFT);
+				}
 			}
 
 			line.dirty = false;
