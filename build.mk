@@ -5,6 +5,7 @@ LDFLAGS=$(LIBUTILS)
 
 BUILD_DIRS=$(BUILD) \
 		   $(BUILD)/include \
+		   $(BUILD)/include/nanorl \
 		   $(BUILD)/lib \
 		   $(BUILD)/bin \
 		   $(OBJ_DIR)
@@ -39,7 +40,7 @@ $(foreach build_dir, $(BUILD_DIRS), \
 
 .PHONY: headers
 headers: $(BUILD_DIRS)
-	cp -R $(PWD)/include $(BUILD)/include/nanorl
+	cp -R $(PWD)/include/* $(BUILD)/include/nanorl
 
 $(TARGET_SHARED): $(BUILD) $(OBJS) $(LIBUTILS)
 	$(CC) -shared -o $@ $(OBJS) $(LDFLAGS)
