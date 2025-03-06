@@ -105,18 +105,27 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 	while ((read_res = nrl_io_read(&read_buf)) != INPUT_STOP) {
 		uint32_t rendered_count = line.buffer.count;
 
-		switch (read_res) {
-		case INPUT_ASCII:
+		if (read_res == INPUT_ASCII) {
 			nrl_manip_insert_ascii(&line, read_buf.text, read_buf.length);
-			break;
-		case INPUT_ESCAPE:
+		} else if (read_res == INPUT_ESCAPE) {
 			nrl_manip_eval_escape(&line, read_buf.escape.input);
-			break;
-		case INPUT_CUSTOM_ESCAPE:
-			// TODO: implement
-			break;
-		default:
-			break;
+		} else if (read_res == INPUT_CUSTOM_ESCAPE) {
+#if CUSTOM_ESCAPES == 1
+			if (nrl_manip_eval_custom(&line, read_buf.escape.custom)) {
+				break;
+			}
+#endif
+			// If custom escapes are disabled or not set, just convert to the
+			// ASCII representation
+			const char *as_text = nrl_lookup_custom(read_buf.escape.custom);
+			for (uint32_t i = 0; i < strlen(as_text); i++) {
+				if (nrl_io_parse_control(as_text[i], &read_buf)) {
+					nrl_manip_insert_ascii(&line, read_buf.text,
+										   read_buf.length);
+				} else {
+					nrl_manip_insert_ascii(&line, as_text + i, 1);
+				}
+			}
 		}
 
 		// Perform a full re-render
@@ -286,6 +295,10 @@ static bool init(const nrl_config *config) {
 		}
 	}
 
+#if CUSTOM_ESCAPES == 1
+	nrl_manip_make_custom_table(config);
+#endif // CUSTOM_ESCAPES
+
 	nrl_io_echo_state(config->echo_mode != NRL_ECHO_OFF);
 	return nrl_io_flush();
 }
@@ -298,6 +311,10 @@ static bool init(const nrl_config *config) {
  *         false - Teardown failed.
  */
 static bool deinit(const nrl_config *config) {
+#if CUSTOM_ESCAPES == 1
+	nrl_manip_clear_custom_table();
+#endif // CUSTOM_ESCAPES
+
 	if (isatty(config->read_file)) {
 		if (tcsetattr(config->read_file, TCSAFLUSH, &old_attrs) < 0) {
 			return false;
