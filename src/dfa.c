@@ -3,13 +3,14 @@
  * @file dfa.c
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
- * @date 2024
+ * @date 2024-2025
  * @license LGPLv3.0
  * @brief Simplified DFA for escape sequences.
  */
 #define _POSIX_C_SOURCE 200809L
 #include "dfa.h"
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -28,7 +29,7 @@ typedef struct dfa_node dfa_node;
  */
 typedef union {
 	dfa_node *children;
-	terminfo_input accept;
+	dfa_acceptor accept;
 } dfa_value;
 
 /**
@@ -45,6 +46,7 @@ typedef union {
  */
 struct dfa_node {
 	char edge;
+	bool custom;
 	dfa_value value;
 	uint32_t children_count;
 };
@@ -55,25 +57,36 @@ struct dfa_node {
  */
 static dfa_node root = {
 	.edge = '\0',
+	.custom = false,
 	.value.children = NULL,
 	.children_count = 0,
 };
 
-static void dfa_insert(const char *sequence, terminfo_input accept_value);
+static void
+dfa_insert(const char *sequence, dfa_acceptor accept_value, bool custom);
 
 void nrl_dfa_build(void) {
 	for (uint32_t i = 0; i < TII_COUNT; i++) {
 		const char *sequence = nrl_lookup_input(i);
 		if (sequence != NULL) {
-			dfa_insert(sequence, i);
+			dfa_acceptor acceptor = { .input = i };
+			dfa_insert(sequence, acceptor, false);
+		}
+	}
+
+	for (uint32_t i = 0; i < TIC_COUNT; i++) {
+		const char *sequence = nrl_lookup_custom(i);
+		if (sequence != NULL) {
+			dfa_acceptor acceptor = { .custom = i };
+			dfa_insert(sequence, acceptor, true);
 		}
 	}
 }
 
-bool nrl_dfa_parse(char (*next_char)(), terminfo_input *accept_buf) {
+dfa_result nrl_dfa_parse(char (*next_char)(), dfa_acceptor *accept_buf) {
 	// Empty tree
 	if (root.children_count == 0) {
-		return false;
+		return DFA_RES_EMPTY;
 	}
 
 	const dfa_node *trav = &root;
@@ -86,7 +99,7 @@ bool nrl_dfa_parse(char (*next_char)(), terminfo_input *accept_buf) {
 				// Check if leaf node reached
 				if (child->children_count == 0) {
 					*accept_buf = child->value.accept;
-					return true;
+					return (child->custom) ? DFA_RES_CUSTOM : DFA_RES_INPUT;
 				}
 
 				trav = child;
@@ -94,7 +107,7 @@ bool nrl_dfa_parse(char (*next_char)(), terminfo_input *accept_buf) {
 			}
 		}
 
-		return false;
+		return DFA_RES_EMPTY;
 
 		// For breaking out of inner for loop
 parse_next:
@@ -135,8 +148,10 @@ void nrl_dfa_print(void) {
  *
  * @param[in] sequence - Sequence to add.
  * @param[in] accept_value - Output value on completed match.
+ * @param[in] custom - Acceptor value is a configurable sequence.
  */
-static void dfa_insert(const char *sequence, terminfo_input accept_value) {
+static void
+dfa_insert(const char *sequence, dfa_acceptor accept_value, bool custom) {
 	dfa_node *current = &root;
 
 	char edge;
@@ -156,6 +171,7 @@ static void dfa_insert(const char *sequence, terminfo_input accept_value) {
 		current->children_count++;
 
 		child->edge = edge;
+		child->custom = custom;
 		child->value.children = NULL;
 		child->children_count = 0;
 		current = child;

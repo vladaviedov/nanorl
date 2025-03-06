@@ -3,7 +3,7 @@
  * @file io.h
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
- * @date 2024
+ * @date 2024-2025
  * @license LGPLv3.0
  * @brief Input and output processing.
  */
@@ -12,6 +12,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "dfa.h"
 #include "terminfo.h"
 
 #define SINGLE_BUF_SIZE 16
@@ -20,22 +21,26 @@
  * @enum input_type
  * Type of input received.
  *
- * @var input_type::NRL_INPUT_ASCII
+ * @var input_type::INPUT_ASCII
  * ASCII character or a string of ASCII characters.
  *
- * @var input_type::NRL_INPUT_UTF8
+ * @var input_type::INPUT_UTF8
  * Multibyte UTF-8 character.
  *
- * @var input_type::NRL_INPUT_ESCAPE
+ * @var input_type::INPUT_ESCAPE
  * Valid escape code received.
  *
- * @var input_type::NRL_INPUT_STOP
+ * @var input_type::INPUT_CUSTOM_ESCAPE
+ * Valid configurable escape code received.
+ *
+ * @var input_type::INPUT_STOP
  * End condition received.
  */
 typedef enum {
 	INPUT_ASCII,
 	INPUT_UTF8,
 	INPUT_ESCAPE,
+	INPUT_CUSTOM_ESCAPE,
 	INPUT_STOP,
 } input_type;
 
@@ -62,7 +67,7 @@ typedef enum {
  * Flag for whether there is more input in the buffer currently.
  */
 typedef struct {
-	terminfo_input escape;
+	dfa_acceptor escape;
 	bool eof;
 	char text[SINGLE_BUF_SIZE];
 	uint32_t length;

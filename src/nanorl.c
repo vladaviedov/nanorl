@@ -3,7 +3,7 @@
  * @file nanorl.c
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
- * @date 2024
+ * @date 2024-2025
  * @license LGPLv3.0
  * @brief Small line editing library.
  */
@@ -109,7 +109,10 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 			nrl_manip_insert_ascii(&line, read_buf.text, read_buf.length);
 			break;
 		case INPUT_ESCAPE:
-			nrl_manip_eval_escape(&line, read_buf.escape);
+			nrl_manip_eval_escape(&line, read_buf.escape.input);
+			break;
+		case INPUT_CUSTOM_ESCAPE:
+			// TODO: implement
 			break;
 		default:
 			break;

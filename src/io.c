@@ -3,7 +3,7 @@
  * @file io.c
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
- * @date 2024
+ * @date 2024-2025
  * @license LGPLv3.0
  * @brief Input and output processing.
  */
@@ -56,12 +56,14 @@ void nrl_io_init(int read_fd, int echo_fd, const char *preload) {
 }
 
 input_type nrl_io_read(input_buf *buffer) {
-	if (nrl_dfa_parse(&io_next_char, &buffer->escape)) {
+	dfa_result parse_result = nrl_dfa_parse(&io_next_char, &buffer->escape);
+	if (parse_result != DFA_RES_EMPTY) {
 		rd_used += rd_pending;
 		rd_pending = 0;
 		buffer->more = (rd_used < rd_count);
 
-		return INPUT_ESCAPE;
+		return (parse_result == DFA_RES_CUSTOM) ? INPUT_CUSTOM_ESCAPE
+												: INPUT_ESCAPE;
 	}
 
 	// This should only happen here if TERM is unset
