@@ -2,13 +2,15 @@
  * @file nanorl.h
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
- * @date 2024
+ * @date 2024-2025
  * @license LGPLv3.0
  * @brief Small line editing library.
  */
 #pragma once
 
 #include <stdbool.h>
+
+#include "escape.h"
 
 /**
  * @var nrl_version
@@ -86,6 +88,11 @@ typedef enum {
  *
  * @var nrl_config::echo_mode
  * Echo behavior mode.
+ *
+ * @var nrl_config::handlers
+ * Null-terminated custom escape handler list.
+ * @note Applied in order. When multiple handlers for an escape are provided,
+ * the last one will be used
  */
 typedef struct {
 	int read_file;
@@ -96,6 +103,8 @@ typedef struct {
 
 	bool assume_smkx;
 	nrl_echo_mode echo_mode;
+
+	nrl_escape_handler *handlers;
 } nrl_config;
 
 /**

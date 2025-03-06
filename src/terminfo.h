@@ -11,6 +11,8 @@
 
 #include <stdbool.h>
 
+#include "escape.h"
+
 /**
  * @enum terminfo_input
  * Internal identifiers for terminfo input sequences.
@@ -26,23 +28,15 @@ typedef enum {
 
 /**
  * @def TII_COUNT
- * Total entries in @ref terminfo_input
+ * Total entries in @ref terminfo_input.
  */
 #define TII_COUNT 6
 
-/**
- * @enum terminfo_custom
- * Internal identifiers for configurable terminfo input sequences.
- */
-typedef enum {
-	TIC_KEY_UP,
-	TIC_KEY_DOWN,
-	TIC_TAB,
-} terminfo_custom;
+typedef nrl_escape terminfo_custom;
 
 /**
  * @def TIC_COUNT
- * Total entries in @ref terminfo_custom
+ * Total entries in @ref nrl_escape.
  */
 #define TIC_COUNT 3
 
@@ -59,7 +53,7 @@ typedef enum {
 
 /**
  * @def TIO_COUNT
- * Total entries in @ref terminfo_output
+ * Total entries in @ref terminfo_output.
  */
 #define TIO_COUNT 4
 

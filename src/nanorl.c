@@ -67,6 +67,7 @@ static const nrl_config default_conf = {
 	.preload = NULL,
 	.assume_smkx = false,
 	.echo_mode = NRL_ECHO_ON,
+	.handlers = NULL,
 };
 
 #define safe_assign(var_ptr, val)                                              \
