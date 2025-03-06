@@ -3,7 +3,7 @@
  * @file terminfo.c
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
- * @date 2024
+ * @date 2024-2025
  * @license LGPLv3.0
  * @brief terminfo parser.
  */
@@ -64,7 +64,7 @@ static const char *sysdb_path[] = {
 /**
  * @var input_seq_indices
  * Indices into the strings terminfo array for input escape sequences.
- * @note Reference: ncurses source 'include/Caps'
+ * @note Reference: ncurses source 'include/Caps' or generated 'term.h'
  */
 static const uint8_t input_seq_indices[] = {
 	79u,  // key_left
@@ -76,9 +76,20 @@ static const uint8_t input_seq_indices[] = {
 };
 
 /**
+ * @var custom_seq_indices
+ * Indices into the strings terminfo array for input escape sequences.
+ * @note Reference: ncurses source 'include/Caps' or generated 'term.h'
+ */
+static const uint8_t custom_seq_indices[] = {
+	87u,  // key_up
+	61u,  // key_down
+	134u, // tab
+};
+
+/**
  * @var output_seq_indices
  * Indices into the strings terminfo array for output escape sequences.
- * @note Reference: ncurses source 'include/Caps'
+ * @note Reference: ncurses source 'include/Caps' or generated 'term.h'
  */
 static const uint8_t output_seq_indices[] = {
 	14u, // cursor_left
@@ -91,11 +102,17 @@ static bool attempted_load = false;
 static bool load_result = false;
 
 static char *inputs[TII_COUNT] = { NULL };
+static char *customs[TIC_COUNT] = { NULL };
 static char *outputs[TIO_COUNT] = { NULL };
 
 static FILE *find_entry(const char *term);
 static FILE *try_open(const char *db_path, const char *term);
 static bool parse(FILE *terminfo);
+static void lookup_strings(const int16_t *strings,
+						   const char *strings_table,
+						   const uint8_t *indices,
+						   uint32_t length,
+						   char **buf);
 
 bool nrl_load_terminfo(void) {
 	if (attempted_load) {
@@ -112,7 +129,7 @@ bool nrl_load_terminfo(void) {
 
 #if FASTLOAD == 1
 	if (strstr(env_term, "xterm")) {
-		nrl_fl_xterm((char **)&inputs, (char **)&outputs);
+		nrl_fl_xterm((char **)&inputs, (char **)&customs, (char **)&outputs);
 	}
 #endif // FASTLOAD
 
@@ -127,6 +144,10 @@ bool nrl_load_terminfo(void) {
 
 const char *nrl_lookup_input(terminfo_input id) {
 	return inputs[id];
+}
+
+const char *nrl_lookup_custom(terminfo_custom id) {
+	return customs[id];
 }
 
 const char *nrl_lookup_output(terminfo_output id) {
@@ -265,26 +286,38 @@ static bool parse(FILE *terminfo) {
 	}
 
 	// Lookup all relevant capability
-	for (uint32_t i = 0; i < TII_COUNT; i++) {
-		int16_t offset = strings[input_seq_indices[i]];
-		char *sequence = (offset < 0) ? NULL : (strings_table + offset);
-
-		if (sequence == NULL || strlen(sequence) == 0) {
-			inputs[i] = NULL;
-		} else {
-			inputs[i] = strdup(sequence);
-		}
-	}
-	for (uint32_t i = 0; i < TIO_COUNT; i++) {
-		int16_t offset = strings[output_seq_indices[i]];
-		char *sequence = (offset < 0) ? NULL : (strings_table + offset);
-
-		if (sequence == NULL || strlen(sequence) == 0) {
-			outputs[i] = NULL;
-		} else {
-			outputs[i] = strdup(sequence);
-		}
-	}
+	lookup_strings(strings, strings_table, input_seq_indices, TII_COUNT,
+				   inputs);
+	lookup_strings(strings, strings_table, custom_seq_indices, TIC_COUNT,
+				   customs);
+	lookup_strings(strings, strings_table, output_seq_indices, TIO_COUNT,
+				   outputs);
 
 	return true;
+}
+
+/**
+ * @brief Lookup requested strings in the terminfo data.
+ *
+ * @param[in] strings - terminfo file strings section.
+ * @param[in] strings_table - terminfo file strings table.
+ * @param[in] indices - Requested string indices.
+ * @param[in] length - Length of 'indices'.
+ * @param[out] buf - Looked up data will be placed here.
+ */
+static void lookup_strings(const int16_t *strings,
+						   const char *strings_table,
+						   const uint8_t *indices,
+						   uint32_t length,
+						   char **buf) {
+	for (uint32_t i = 0; i < length; i++) {
+		int16_t offset = strings[indices[i]];
+		const char *sequence = (offset < 0) ? NULL : (strings_table + offset);
+
+		if (sequence == NULL || strlen(sequence) == 0) {
+			buf[i] = NULL;
+		} else {
+			buf[i] = strdup(sequence);
+		}
+	}
 }

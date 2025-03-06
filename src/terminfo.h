@@ -3,7 +3,7 @@
  * @file terminfo.h
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
- * @date 2024
+ * @date 2024-2025
  * @license LGPLv3.0
  * @brief terminfo parser.
  */
@@ -29,6 +29,22 @@ typedef enum {
  * Total entries in @ref terminfo_input
  */
 #define TII_COUNT 6
+
+/**
+ * @enum terminfo_custom
+ * Internal identifiers for configurable terminfo input sequences.
+ */
+typedef enum {
+	TIC_KEY_UP,
+	TIC_KEY_DOWN,
+	TIC_TAB,
+} terminfo_custom;
+
+/**
+ * @def TIC_COUNT
+ * Total entries in @ref terminfo_custom
+ */
+#define TIC_COUNT 3
 
 /**
  * @enum terminfo_output
@@ -63,6 +79,15 @@ bool nrl_load_terminfo(void);
  * @note Should only be called after nrl_load_terminfo.
  */
 const char *nrl_lookup_input(terminfo_input id);
+
+/**
+ * @brief Get ASCII string for configuratble input escape sequence.
+ *
+ * @param[in] id - Interal identifier.
+ * @return ASCII representation, null-terminated string.
+ * @note Should only be called after nrl_load_terminfo.
+ */
+const char *nrl_lookup_custom(terminfo_custom id);
 
 /**
  * @brief Get ASCII string for output escape sequence.
