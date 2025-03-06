@@ -37,7 +37,6 @@ static bool echo_enabled = false;
 
 static char io_next_char(void);
 static ssize_t read_wrapper(int fd, char *buf, size_t count);
-static bool parse_ascii_control(char ascii, input_buf *buffer);
 
 void nrl_io_init(int read_fd, int echo_fd, const char *preload) {
 	read_file = read_fd;
@@ -85,13 +84,27 @@ input_type nrl_io_read(input_buf *buffer) {
 	// TODO: UTF8 handling
 
 	// Check for unprintable control codes
-	if (!parse_ascii_control(ascii, buffer)) {
+	if (!nrl_io_parse_control(ascii, buffer)) {
 		// Character is printable: place it in buffer ourselves
 		buffer->text[0] = ascii;
 		buffer->length = 1;
 	}
 
 	return INPUT_ASCII;
+}
+
+bool nrl_io_parse_control(char ascii, input_buf *buffer) {
+	// C0 codes are below 0x20
+	if (ascii >= 0x20) {
+		return false;
+	}
+
+	// Generally how C0 codes are represented
+	buffer->text[0] = '^';
+	buffer->text[1] = ascii + 0x40;
+	buffer->length = 2;
+
+	return true;
 }
 
 bool nrl_io_write(const char *data, uint32_t length) {
@@ -220,29 +233,6 @@ static ssize_t read_wrapper(int fd, char *buf, size_t count) {
 
 	// All good otherwise
 	return bytes;
-}
-
-/**
- * @brief Check if the input is a C0 code and if so, populate buffer with a
- * printable representation.
- *
- * @param[in] ascii - ASCII character.
- * @param[out] buffer - Buffer for input.
- * @return true - Character is a C0 code; buffer populated. \n
- *         false - Character is printable.
- */
-static bool parse_ascii_control(char ascii, input_buf *buffer) {
-	// C0 codes are below 0x20
-	if (ascii >= 0x20) {
-		return false;
-	}
-
-	// Generally how C0 codes are represented
-	buffer->text[0] = '^';
-	buffer->text[1] = ascii + 0x40;
-	buffer->length = 2;
-
-	return true;
 }
 
 // @endcond

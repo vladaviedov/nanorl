@@ -92,6 +92,17 @@ void nrl_io_init(int read_fd, int echo_fd, const char *preload);
 input_type nrl_io_read(input_buf *buffer);
 
 /**
+ * @brief Check if the input is a C0 code and if so, populate buffer with a
+ * printable representation.
+ *
+ * @param[in] ascii - ASCII character.
+ * @param[out] buffer - Buffer for input.
+ * @return true - Character is a C0 code; buffer populated. \n
+ *         false - Character is printable.
+ */
+bool nrl_io_parse_control(char ascii, input_buf *buffer);
+
+/**
  * @brief Write data to output (with buffering).
  *
  * @param[in] data - Data buffer.
