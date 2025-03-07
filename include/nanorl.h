@@ -92,7 +92,8 @@ typedef enum {
  * @var nrl_config::handlers
  * Null-terminated custom escape handler list.
  * @note Applied in order. When multiple handlers for an escape are provided,
- * the last one will be used
+ * the last one will be used.
+ * @note Can be NULL.
  */
 typedef struct {
 	int read_file;
@@ -104,7 +105,7 @@ typedef struct {
 	bool assume_smkx;
 	nrl_echo_mode echo_mode;
 
-	nrl_escape_handler *handlers;
+	nrl_escape_handler **handlers;
 } nrl_config;
 
 /**

@@ -12,6 +12,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <c-utils/vector-ext.h>
@@ -72,14 +73,17 @@ void nrl_manip_eval_escape(line_data *line, terminfo_input escape) {
 
 #if CUSTOM_ESCAPES == 1
 void nrl_manip_make_custom_table(const nrl_config *config) {
-	const nrl_escape_handler *trav = config->handlers;
-	while (trav != NULL) {
-		// Verify escape identifier
-		if (trav->id >= 0 && trav->id < TIC_COUNT) {
-			escape_table[trav->id] = trav;
-		}
+	nrl_escape_handler **trav = config->handlers;
+	if (trav == NULL) {
+		return;
+	}
 
-		trav++;
+	const nrl_escape_handler *item;
+	while ((item = *trav++) != NULL) {
+		// Verify escape identifier
+		if (item->id >= 0 && item->id < TIC_COUNT) {
+			escape_table[item->id] = item;
+		}
 	}
 }
 
@@ -93,6 +97,10 @@ bool nrl_manip_eval_custom(line_data *line, terminfo_custom escape) {
 		return false;
 	}
 
+	// Add null-char to end of the string
+	char null_char = '\0';
+	vec_push(&line->buffer, &null_char);
+
 	nrl_state export_state = {
 		.line = vec_collect(&line->buffer),
 		// TODO: UTF8 related stuff
@@ -103,6 +111,10 @@ bool nrl_manip_eval_custom(line_data *line, terminfo_custom escape) {
 	nrl_state import_state = handler->func(&export_state, handler->id);
 	uint32_t import_len = strlen(import_state.line);
 	vec_bulk_insert(&line->buffer, 0, import_state.line, import_len);
+
+	// Cleanup strings
+	free(export_state.line);
+	free(import_state.line);
 
 	// TODO: handle utf8 stuff
 	line->cursor

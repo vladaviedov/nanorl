@@ -111,21 +111,22 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 			nrl_manip_eval_escape(&line, read_buf.escape.input);
 		} else if (read_res == INPUT_CUSTOM_ESCAPE) {
 #if CUSTOM_ESCAPES == 1
-			if (nrl_manip_eval_custom(&line, read_buf.escape.custom)) {
-				break;
+			if (!nrl_manip_eval_custom(&line, read_buf.escape.custom)) {
+#endif
+				// If custom escapes are disabled or not set, just convert to
+				// the ASCII representation
+				const char *as_text = nrl_lookup_custom(read_buf.escape.custom);
+				for (uint32_t i = 0; i < strlen(as_text); i++) {
+					if (nrl_io_parse_control(as_text[i], &read_buf)) {
+						nrl_manip_insert_ascii(&line, read_buf.text,
+											   read_buf.length);
+					} else {
+						nrl_manip_insert_ascii(&line, as_text + i, 1);
+					}
+				}
+#if CUSTOM_ESCAPES == 1
 			}
 #endif
-			// If custom escapes are disabled or not set, just convert to the
-			// ASCII representation
-			const char *as_text = nrl_lookup_custom(read_buf.escape.custom);
-			for (uint32_t i = 0; i < strlen(as_text); i++) {
-				if (nrl_io_parse_control(as_text[i], &read_buf)) {
-					nrl_manip_insert_ascii(&line, read_buf.text,
-										   read_buf.length);
-				} else {
-					nrl_manip_insert_ascii(&line, as_text + i, 1);
-				}
-			}
 		}
 
 		// Perform a full re-render
