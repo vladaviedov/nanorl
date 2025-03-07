@@ -45,7 +45,7 @@ static const escape_manip esc_manips[] = {
 };
 
 #if CUSTOM_ESCAPES == 1
-const static nrl_escape_handler *escape_table[TIC_COUNT] = { NULL };
+static const nrl_escape_handler *escape_table[TIC_COUNT] = { NULL };
 #endif // CUSTOM_ESCAPES
 
 void nrl_manip_insert_ascii(line_data *line,
