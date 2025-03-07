@@ -8,8 +8,14 @@
 #include <nanorl/nanorl.h>
 #include <nanorl/escape.h>
 
+#ifdef __GNUC__
+#define unused __attribute__((unused))
+#else
+#define unused
+#endif
+
 static const char *err_to_string(nrl_error err);
-static nrl_state tab_func(const nrl_state *state, nrl_escape code);
+static nrl_state tab_func(const nrl_state *state, unused nrl_escape code);
 
 int main(void) {
 	printf("nanorl version: %s\n\n", nrl_version);
@@ -85,7 +91,7 @@ static const char *err_to_string(nrl_error err) {
 	return NULL;
 }
 
-static nrl_state tab_func(const nrl_state *state, nrl_escape code) {
+static nrl_state tab_func(const nrl_state *state, unused nrl_escape code) {
 	// Create new string with 4 more characters
 	uint32_t new_len = strlen(state->line) + 4 + 1;
 	char *modified = malloc(sizeof(char) * new_len);
