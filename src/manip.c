@@ -73,7 +73,7 @@ void nrl_manip_eval_escape(line_data *line, terminfo_input escape) {
 
 #if CUSTOM_ESCAPES == 1
 void nrl_manip_make_custom_table(const nrl_config *config) {
-	nrl_escape_handler **trav = config->handlers;
+	nrl_escape_handler **trav = config->custom_handlers;
 	if (trav == NULL) {
 		return;
 	}

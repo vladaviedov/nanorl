@@ -65,7 +65,7 @@ int main(void) {
 	};
 	config.prompt = "try hitting tab: ";
 	config.preload = NULL;
-	config.handlers = handler_list;
+	config.custom_handlers = handler_list;
 	input = nanorl(&config, &error);
 	printf("%s\n", err_to_string(error));
 	printf("You typed: %s\n\n", input);

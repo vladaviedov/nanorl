@@ -89,7 +89,11 @@ typedef enum {
  * @var nrl_config::echo_mode
  * Echo behavior mode.
  *
- * @var nrl_config::handlers
+ * @var nrl_config::custom_ignore_default
+ * When set, any unimplemented custom escape key will be ignored. Otherwise,
+ * the ASCII representation will be printed.
+ *
+ * @var nrl_config::custom_handlers
  * Null-terminated custom escape handler list.
  * @note Applied in order. When multiple handlers for an escape are provided,
  * the last one will be used.
@@ -105,7 +109,8 @@ typedef struct {
 	bool assume_smkx;
 	nrl_echo_mode echo_mode;
 
-	nrl_escape_handler **handlers;
+	bool custom_ignore_default;
+	nrl_escape_handler **custom_handlers;
 } nrl_config;
 
 /**
