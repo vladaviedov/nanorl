@@ -301,7 +301,10 @@ static bool init(const nrl_config *config) {
 	}
 
 #if CUSTOM_ESCAPES == 1
-	nrl_manip_make_custom_table(config);
+	// Custom handlers are disabled for secure data
+	if (config->echo_mode == NRL_ECHO_ON) {
+		nrl_manip_make_custom_table(config);
+	}
 #endif // CUSTOM_ESCAPES
 
 	nrl_io_echo_state(config->echo_mode != NRL_ECHO_OFF);

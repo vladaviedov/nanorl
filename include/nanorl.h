@@ -98,6 +98,8 @@ typedef enum {
  * @note Applied in order. When multiple handlers for an escape are provided,
  * the last one will be used.
  * @note Can be NULL.
+ * @warning Custom handlers are only enabled for @ref
+ * nrl_echo_mode::NRL_ECHO_ON.
  */
 typedef struct {
 	int read_file;
