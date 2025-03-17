@@ -68,13 +68,12 @@ typedef struct {
  * @var nrl_escape_handler::func
  * User-defined handler function.
  * @param[in] state - Current line state.
- * @note The implementation should free this memory before returning.
  * @param[in] code - Escape code which triggered the handler (same as @ref
  * nrl_escape_handler::id).
  * @return Modified line state.
- * @note The implementation should allocate memory for the line returned.
- * @warning The implementation of the handler must ensure to not place
- * unprintable characters into the modified line.
+ * @note The handler function should allocate memory for the line returned.
+ * @warning The handler function must ensure to not place control characters
+ * into the modified line.
  */
 typedef struct {
 	nrl_escape id;
