@@ -6,4 +6,5 @@
  * API headers:
  * - @ref nanorl.h "<nanorl/nanorl.h>"
  * - @ref readline.h "<nanorl/readline.h>"
+ * - @ref escape.h "<nanorl/escape.h>"
  */

@@ -3,7 +3,7 @@
  * @file manip.c
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
- * @date 2024
+ * @date 2024-2025
  * @license LGPLv3.0
  * @brief Line manipations.
  */
@@ -12,10 +12,13 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <c-utils/vector-ext.h>
 #include <c-utils/vector.h>
 
+#include "escape.h"
 #include "io.h"
 #include "terminfo.h"
 
@@ -41,6 +44,10 @@ static const escape_manip esc_manips[] = {
 	{ 0, NULL },
 };
 
+#if CUSTOM_ESCAPES == 1
+static const nrl_escape_handler *escape_table[TIC_COUNT] = { NULL };
+#endif // CUSTOM_ESCAPES
+
 void nrl_manip_insert_ascii(line_data *line,
 							const char *data,
 							uint32_t length) {
@@ -63,6 +70,60 @@ void nrl_manip_eval_escape(line_data *line, terminfo_input escape) {
 		manip++;
 	}
 }
+
+#if CUSTOM_ESCAPES == 1
+void nrl_manip_make_custom_table(const nrl_config *config) {
+	nrl_escape_handler **trav = config->custom_handlers;
+	if (trav == NULL) {
+		return;
+	}
+
+	const nrl_escape_handler *item;
+	while ((item = *trav++) != NULL) {
+		// Verify escape identifier
+		if (item->id >= 0 && item->id < TIC_COUNT) {
+			escape_table[item->id] = item;
+		}
+	}
+}
+
+void nrl_manip_clear_custom_table(void) {
+	memset(escape_table, 0, sizeof(escape_table));
+}
+
+bool nrl_manip_eval_custom(line_data *line, terminfo_custom escape) {
+	const nrl_escape_handler *handler = escape_table[escape];
+	if (handler == NULL) {
+		return false;
+	}
+
+	// Add null-char to end of the string
+	char null_char = '\0';
+	vec_push(&line->buffer, &null_char);
+
+	nrl_state export_state = {
+		.line = vec_collect(&line->buffer),
+		// TODO: UTF8 related stuff
+		.cursor
+		= (handler->cursor_type == NRL_CT_BYTE) ? line->cursor : line->cursor,
+	};
+
+	nrl_state import_state = handler->func(&export_state, handler->id);
+	uint32_t import_len = strlen(import_state.line);
+	vec_bulk_insert(&line->buffer, 0, import_state.line, import_len);
+
+	// Cleanup strings
+	free(export_state.line);
+	free(import_state.line);
+
+	// TODO: handle utf8 stuff
+	line->cursor
+		= (import_state.cursor > import_len) ? import_len : import_state.cursor;
+	line->dirty = true;
+
+	return true;
+}
+#endif // CUSTOM_ESCAPES
 
 static void escape_backspace(line_data *line) {
 	if (line->cursor > 0) {

@@ -3,7 +3,7 @@
  * @file config.h
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
- * @date 2024
+ * @date 2024-2025
  * @license LGPLv3.0
  * @brief Configuration macros.
  */
@@ -32,5 +32,9 @@
 #ifndef FASTLOAD
 #define FASTLOAD 1
 #endif // FASTLOAD
+
+#ifndef CUSTOM_ESCAPES
+#define CUSTOM_ESCAPES 1
+#endif // CUSTOM_ESCAPES
 
 // @endcond
