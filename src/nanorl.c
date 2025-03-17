@@ -1,5 +1,4 @@
 /**
- * @cond internal
  * @file nanorl.c
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
@@ -351,5 +350,3 @@ static bool deinit(const nrl_config *config) {
 	}
 	return nrl_io_flush();
 }
-
-// @endcond

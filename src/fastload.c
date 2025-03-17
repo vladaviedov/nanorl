@@ -1,5 +1,4 @@
 /**
- * @cond internal
  * @file fastload.c
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
@@ -38,5 +37,3 @@ void nrl_fl_xterm(char **inputs, char **customs, char **outputs) {
 	memcpy(outputs, &xterm_outputs_stub, TIO_COUNT * sizeof(char *));
 }
 #endif // FASTLOAD
-
-// @endcond

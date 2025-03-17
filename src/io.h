@@ -1,5 +1,4 @@
 /**
- * @cond internal
  * @file io.h
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
@@ -50,11 +49,12 @@ typedef enum {
  *
  * @var input_buf::escape
  * Buffer for an input sequence identifier.
- * Used with @ref nrl_input_type::NRL_INPUT_ESCAPE.
+ * Used with @ref input_type::INPUT_ESCAPE and @ref
+ * input_type::INPUT_CUSTOM_ESCAPE.
  *
  * @var input_buf::eof
  * Buffer for EOF flag.
- * Used with @ref NRL_INPUT_STOP.
+ * Used with @ref input_type::INPUT_STOP.
  *
  * @var input_buf::text.
  * Buffer for a text sequence.
@@ -137,5 +137,3 @@ void nrl_io_wipe_buffers(void);
  * @param[in] enabled - If echo should be enabled.
  */
 void nrl_io_echo_state(bool enabled);
-
-// @endcond

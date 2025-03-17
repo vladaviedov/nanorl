@@ -81,4 +81,4 @@ docs:
 
 .PHONY: fulldocs
 fulldocs:
-	ENABLE='internal' $(DOXYGEN) $(DOXYGEN_CONF)
+	SRC_ENABLE='src' $(DOXYGEN) $(DOXYGEN_CONF)

@@ -1,5 +1,4 @@
 /**
- * @cond internal
  * @file dfa.h
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
@@ -67,6 +66,4 @@ dfa_result nrl_dfa_parse(char (*next_char)(), dfa_acceptor *accept_buf);
  * @brief Print DFA tree to standard out.
  */
 void nrl_dfa_print(void);
-#endif // DEBUG
-
-// @endcond
+#endif // DFA_DEBUG

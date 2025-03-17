@@ -1,5 +1,4 @@
 /**
- * @cond internal
  * @file config.h
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
@@ -36,5 +35,3 @@
 #ifndef CUSTOM_ESCAPES
 #define CUSTOM_ESCAPES 1
 #endif // CUSTOM_ESCAPES
-
-// @endcond

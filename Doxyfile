@@ -11,8 +11,7 @@ ALIASES                = "license=@par License:^^"
 OPTIMIZE_OUTPUT_FOR_C  = YES
 TIMESTAMP              = DATETIME
 INPUT                  = main_page.dox \
-                         src \
-						 include
+						 include \
+						 $(SRC_ENABLE)
 FILE_PATTERNS          = *.c *.h
-ENABLED_SECTIONS       = $(ENABLE)
 EXTRACT_STATIC         = YES

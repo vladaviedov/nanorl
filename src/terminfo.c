@@ -1,5 +1,4 @@
 /**
- * @cond internal
  * @file terminfo.c
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1

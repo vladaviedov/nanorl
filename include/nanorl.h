@@ -76,11 +76,11 @@ typedef enum {
  * Character echo file descriptor.
  *
  * @var nrl_config::prompt
- * @info Can be NULL.
+ * @note Can be NULL.
  * Prompt message printed to the user.
  *
  * @var nrl_config::preload
- * @info Can be NULL.
+ * @note Can be NULL.
  * Initial line buffer text.
  *
  * @var nrl_config::assume_smkx

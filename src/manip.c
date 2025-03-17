@@ -1,5 +1,4 @@
 /**
- * @cond internal
  * @file manip.c
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
@@ -176,5 +175,3 @@ static void escape_end(line_data *line) {
 	line->cursor = line->buffer.count;
 	line->render_cursor = line->buffer.count;
 }
-
-// @endcond

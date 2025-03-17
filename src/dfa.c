@@ -1,5 +1,4 @@
 /**
- * @cond internal
  * @file dfa.c
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
@@ -183,5 +182,3 @@ insert_next:
 
 	current->value.accept = accept_value;
 }
-
-// @endcond

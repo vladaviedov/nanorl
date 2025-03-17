@@ -1,5 +1,4 @@
 /**
- * @cond internal
  * @file io.c
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
@@ -234,5 +233,3 @@ static ssize_t read_wrapper(int fd, char *buf, size_t count) {
 	// All good otherwise
 	return bytes;
 }
-
-// @endcond

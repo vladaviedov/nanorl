@@ -1,5 +1,4 @@
 /**
- * @cond internal
  * @file manip.h
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
@@ -81,5 +80,3 @@ void nrl_manip_clear_custom_table(void);
  */
 bool nrl_manip_eval_custom(line_data *line, terminfo_custom escape);
 #endif
-
-// @endcond

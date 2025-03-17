@@ -1,5 +1,4 @@
 /**
- * @cond internal
  * @file terminfo.h
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
@@ -99,5 +98,3 @@ const char *nrl_lookup_output(terminfo_output id);
  *         false - Cannot move cursor.
  */
 bool nrl_cursor_capability(void);
-
-// @endcond
