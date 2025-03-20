@@ -10,8 +10,16 @@ CREATE_SUBDIRS_LEVEL   = 8
 ALIASES                = "license=@par License:^^"
 OPTIMIZE_OUTPUT_FOR_C  = YES
 TIMESTAMP              = DATETIME
-INPUT                  = main_page.dox \
+INPUT                  = doxygen/main_page.dox \
 						 include \
 						 $(SRC_ENABLE)
 FILE_PATTERNS          = *.c *.h
 EXTRACT_STATIC         = YES
+DISABLE_INDEX          = NO
+GENERATE_TREEVIEW      = NO
+HTML_EXTRA_STYLESHEET  = lib/doxygen-awesome-css/doxygen-awesome.css
+HTML_HEADER            = doxygen/header.html
+HTML_EXTRA_FILES      = lib/doxygen-awesome-css/doxygen-awesome-fragment-copy-button.js \
+                         lib/doxygen-awesome-css/doxygen-awesome-darkmode-toggle.js
+HTML_COLORSTYLE        = LIGHT
+HTML_COPY_CLIPBOARD    = NO
