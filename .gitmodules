@@ -1,6 +1,6 @@
 [submodule "lib/c-utils"]
 	path = lib/c-utils
 	url = https://github.com/vladaviedov/c-utils
-[submodule "lib/doxygen-awesome-css"]
-	path = lib/doxygen-awesome-css
+[submodule "doxygen/doxygen-awesome-css"]
+	path = doxygen/doxygen-awesome-css
 	url = https://github.com/jothepro/doxygen-awesome-css.git
