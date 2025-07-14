@@ -14,11 +14,14 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <c-utils/uchar.h>
+
 #include "dfa.h"
 #include "terminfo.h"
 
 #define IO_BUF_SIZE 4096
 #define CHAR_EOT 4
+#define UNICODE_ERROR_CHAR 0xfffd
 
 static int read_file = -1;
 static int echo_file = -1;
@@ -34,7 +37,8 @@ static uint32_t wr_count = 0;
 static const char *preload_data = NULL;
 static bool echo_enabled = false;
 
-static char io_next_char(void);
+static char next_char(void);
+static uchar next_uchar(void);
 static ssize_t read_wrapper(int fd, char *buf, size_t count);
 
 void nrl_io_init(int read_fd, int echo_fd, const char *preload) {
@@ -54,7 +58,7 @@ void nrl_io_init(int read_fd, int echo_fd, const char *preload) {
 }
 
 input_type nrl_io_read(input_buf *buffer) {
-	dfa_result parse_result = nrl_dfa_parse(&io_next_char, &buffer->escape);
+	dfa_result parse_result = nrl_dfa_parse(&next_char, &buffer->escape);
 	if (parse_result != DFA_RES_EMPTY) {
 		rd_used += rd_pending;
 		rd_pending = 0;
@@ -70,26 +74,24 @@ input_type nrl_io_read(input_buf *buffer) {
 		rd_used = 0;
 	}
 
-	rd_pending = 0;
-	char ascii = rd_buf[rd_used++];
+	// Get next unicode point
+	uchar uc = next_uchar();
 	buffer->more = (rd_used < rd_count);
 
 	// Check for stop conditions (newline and EOF)
-	if (ascii == '\n' || ascii == CHAR_EOT) {
-		buffer->eof = (ascii == CHAR_EOT);
+	if (uc == '\n' || uc == CHAR_EOT) {
+		buffer->eof = (uc == CHAR_EOT);
 		return INPUT_STOP;
 	}
 
-	// TODO: UTF8 handling
-
 	// Check for unprintable control codes
-	if (!nrl_io_parse_control(ascii, buffer)) {
+	if (!nrl_io_parse_control((char)uc, buffer)) {
 		// Character is printable: place it in buffer ourselves
-		buffer->text[0] = ascii;
+		buffer->text[0] = uc;
 		buffer->length = 1;
 	}
 
-	return INPUT_ASCII;
+	return INPUT_TEXT;
 }
 
 bool nrl_io_parse_control(char ascii, input_buf *buffer) {
@@ -169,7 +171,7 @@ void nrl_io_echo_state(bool enabled) {
  *
  * @return Next character.
  */
-static char io_next_char(void) {
+static char next_char(void) {
 	// No characters in buffer: read in more
 	if (rd_used == rd_count) {
 		// Reset counters
@@ -194,6 +196,51 @@ static char io_next_char(void) {
 	}
 
 	return rd_buf[rd_used + rd_pending++];
+}
+
+/**
+ * @brief Get next unicode point from input.
+ *
+ * @return Next unicode point.
+ */
+static uchar next_uchar(void) {
+	char buffer[4] = { 0 };
+
+	// Load buffer
+	buffer[0] = next_char();
+	switch (utf8_inspect(buffer[0])) {
+	case U8BI_2BYTES:
+		buffer[1] = next_char();
+		break;
+	case U8BI_3BYTES:
+		buffer[1] = next_char();
+		buffer[2] = next_char();
+		break;
+	case U8BI_4BYTES:
+		buffer[1] = next_char();
+		buffer[2] = next_char();
+		buffer[3] = next_char();
+		break;
+	default:
+		// Let the parser detect other errors
+		break;
+	}
+
+	// Parse unicode value
+	uchar uc;
+	uint32_t consumed = utf8_parse_uchar(buffer, &uc);
+
+	if (consumed == 0) {
+		rd_used++;
+		rd_pending = 0;
+
+		return UNICODE_ERROR_CHAR;
+	}
+
+	// Successful parse
+	rd_used += consumed;
+	rd_pending = 0;
+	return uc;
 }
 
 /**

@@ -11,6 +11,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <c-utils/uchar.h>
+
 #include "dfa.h"
 #include "terminfo.h"
 
@@ -36,8 +38,7 @@
  * End condition received.
  */
 typedef enum {
-	INPUT_ASCII,
-	INPUT_UTF8,
+	INPUT_TEXT,
 	INPUT_ESCAPE,
 	INPUT_CUSTOM_ESCAPE,
 	INPUT_STOP,
@@ -69,7 +70,7 @@ typedef enum {
 typedef struct {
 	dfa_acceptor escape;
 	bool eof;
-	char text[SINGLE_BUF_SIZE];
+	uchar text[SINGLE_BUF_SIZE];
 	uint32_t length;
 	bool more;
 } input_buf;
