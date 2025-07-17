@@ -140,7 +140,7 @@ bool nrl_manip_eval_custom(line_data *line, terminfo_custom escape) {
 		vec_bulk_insert(&line->buffer, 0, uc_line, ustrlen(uc_line));
 
 		// Need to do the same trick when we import data as well
-		utf8_line[line->cursor] = '\0';
+		utf8_line[import_data.cursor] = '\0';
 		bool error_flag;
 		uchar *uc_before_cursor = utf8_decode(utf8_line, &error_flag);
 		line->cursor = ustrlen(uc_before_cursor);
