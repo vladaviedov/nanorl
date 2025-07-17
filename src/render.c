@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <c-utils/uchar.h>
@@ -39,6 +40,11 @@ void nrl_render_init(nrl_echo_mode mode) {
 }
 
 void nrl_render_redraw(line_data *line) {
+	// Terminate string: this is a hack to get utf8_encode to work properly.
+	// Refactor maybe?
+	uchar null_char = 0;
+	vec_push(&line->buffer, &null_char);
+
 	switch (echo_mode) {
 	case NRL_ECHO_ON:
 		redraw_normal(line);
@@ -50,9 +56,10 @@ void nrl_render_redraw(line_data *line) {
 		break;
 	}
 
-	line->dirty = false;
-	line->render_cursor = line->cursor;
+	// Unterminate string
+	vec_erase(&line->buffer, line->buffer.count - 1, NULL);
 
+	line->dirty = false;
 	nrl_io_flush();
 }
 
@@ -83,18 +90,26 @@ static void redraw_normal(line_data *line) {
 
 	// Print line data
 	nrl_io_write(data, len);
+	line->render_cursor = line->buffer.count - 1;
 
 	// Account for erased characters
-	for (uint32_t i = line->buffer.count; i < last_rendered_width; i++) {
+	int32_t to_erase = (int32_t)last_rendered_width - (line->buffer.count - 1);
+	for (int32_t i = 0; i < to_erase; i++) {
 		nrl_io_write(" ", 1);
-		line->render_cursor++;
+	}
+
+	// Go back to end of string: can't use move to pos here
+	for (int32_t i = 0; i < to_erase; i++) {
+		nrl_io_write_escape(TIO_CURSOR_LEFT);
 	}
 
 	// Update for next cycle
-	last_rendered_width = ucswidth(line->buffer.data, line->buffer.count);
+	int width = ucswidth(line->buffer.data, line->buffer.count - 1);
+	assert(width != -1);
+	last_rendered_width = width;
 
-	// Move cursor to correct location
 	move_to_pos(line, line->cursor);
+	free(data);
 }
 
 /**
@@ -105,7 +120,7 @@ static void redraw_normal(line_data *line) {
 static void redraw_obscured(line_data *line) {
 	if (!cursor_cap) {
 		// On dumb terminals, just add the new characters
-		for (uint32_t i = 0; i < line->buffer.count - line->render_cursor;
+		for (uint32_t i = 0; i < line->buffer.count - 1 - line->render_cursor;
 			 i++) {
 			nrl_io_write("*", 1);
 		}
@@ -116,20 +131,25 @@ static void redraw_obscured(line_data *line) {
 	move_to_pos(line, 0);
 
 	// Print line data
-	for (uint32_t i = 0; i < line->buffer.count; i++) {
+	for (uint32_t i = 0; i < line->buffer.count - 1; i++) {
 		nrl_io_write("*", 1);
 	}
+	line->render_cursor = line->buffer.count - 1;
 
 	// Account for erased characters
-	for (uint32_t i = line->buffer.count; i < last_rendered_width; i++) {
+	int32_t to_erase = (int32_t)last_rendered_width - (line->buffer.count - 1);
+	for (int32_t i = 0; i < to_erase; i++) {
 		nrl_io_write(" ", 1);
-		line->render_cursor++;
+	}
+
+	// Go back to end of string: can't use move to pos here
+	for (int32_t i = 0; i < to_erase; i++) {
+		nrl_io_write_escape(TIO_CURSOR_LEFT);
 	}
 
 	// Update for next cycle
 	last_rendered_width = line->render_cursor;
 
-	// Move cursor to correct location
 	move_to_pos(line, line->cursor);
 }
 

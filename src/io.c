@@ -75,6 +75,7 @@ input_type nrl_io_read(input_buf *buffer) {
 	}
 
 	// Get next unicode point
+	rd_pending = 0;
 	uchar uc = next_uchar();
 	buffer->more = (rd_used < rd_count);
 

@@ -167,7 +167,7 @@ bool nrl_manip_eval_custom(line_data *line, terminfo_custom escape) {
 
 static void escape_backspace(line_data *line) {
 	if (line->cursor > 0) {
-		line->cursor--;
+		escape_left(line);
 		escape_delete(line);
 	}
 }
