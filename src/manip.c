@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <c-utils/uchar.h>
+#include <c-utils/ustring.h>
 #include <c-utils/vector-ext.h>
 #include <c-utils/vector.h>
 
@@ -48,8 +50,8 @@ static const nrl_escape_handler *escape_table[TIC_COUNT] = { NULL };
 #endif // CUSTOM_ESCAPES
 
 void nrl_manip_insert_text(line_data *line,
-							const uchar *data,
-							uint32_t length) {
+						   const uchar *data,
+						   uint32_t length) {
 	vector_status res
 		= vec_bulk_insert(&line->buffer, line->cursor, data, length);
 	assert(res == VECTOR_STATUS_OK);
@@ -97,29 +99,68 @@ bool nrl_manip_eval_custom(line_data *line, terminfo_custom escape) {
 	}
 
 	// Add null-char to end of the string
-	char null_char = '\0';
+	uchar null_char = 0;
 	vec_push(&line->buffer, &null_char);
 
-	nrl_state export_state = {
-		.line = vec_collect(&line->buffer),
-		// TODO: UTF8 related stuff
-		.cursor
-		= (handler->cursor_type == NRL_CT_BYTE) ? line->cursor : line->cursor,
-	};
+	// Create export data
+	nrl_state export_data;
+	uchar *uc_line = vec_collect(&line->buffer);
+	if (handler->format == NRL_DF_UTF32) {
+		export_data.line.utf32_line = uc_line;
+		export_data.cursor = line->cursor;
+	} else {
+		export_data.line.utf8_line = utf8_encode(uc_line);
 
-	nrl_state import_state = handler->func(&export_state, handler->id);
-	uint32_t import_len = strlen(import_state.line);
-	vec_bulk_insert(&line->buffer, 0, import_state.line, import_len);
+		// To calculate byte cursor, we can replace the selected uchar with a
+		// null, encode the string in UTF-8 and check its length. I don't see
+		// a more efficient way to do this.
+		uc_line[line->cursor] = 0;
+		char *utf8_before_cursor = utf8_encode(uc_line);
+		export_data.cursor = strlen(utf8_before_cursor);
 
-	// Cleanup strings
-	free(export_state.line);
-	free(import_state.line);
+		free(uc_line);
+		free(utf8_before_cursor);
+	}
 
-	// TODO: handle utf8 stuff
-	line->cursor
-		= (import_state.cursor > import_len) ? import_len : import_state.cursor;
+	// Execute handler
+	nrl_state import_data = handler->func(&export_data, handler->id);
+
+	// Parse import data
+	if (handler->format == NRL_DF_UTF32) {
+		uchar *uc_line = import_data.line.utf32_line;
+		vec_bulk_insert(&line->buffer, 0, uc_line, ustrlen(uc_line));
+		line->cursor = import_data.cursor;
+
+		// Cleanup strings
+		free(export_data.line.utf32_line);
+		free(import_data.line.utf32_line);
+	} else {
+		char *utf8_line = import_data.line.utf8_line;
+		uchar *uc_line = utf8_decode(utf8_line, NULL);
+		vec_bulk_insert(&line->buffer, 0, uc_line, ustrlen(uc_line));
+
+		// Need to do the same trick when we import data as well
+		utf8_line[line->cursor] = '\0';
+		bool error_flag;
+		uchar *uc_before_cursor = utf8_decode(utf8_line, &error_flag);
+		line->cursor = ustrlen(uc_before_cursor);
+		if (error_flag) {
+			// We may have stepped in the middle of a unicode point, and then we
+			// need to adjust the cursor by backtracking to the last common
+			// point and adding 1
+			uint32_t adjust = line->cursor;
+			while (uc_line[adjust] != uc_before_cursor[adjust]) {
+				adjust--;
+			}
+			line->cursor = adjust + 1;
+		}
+
+		free(uc_before_cursor);
+		free(export_data.line.utf8_line);
+		free(import_data.line.utf8_line);
+	}
+
 	line->dirty = true;
-
 	return true;
 }
 #endif // CUSTOM_ESCAPES
