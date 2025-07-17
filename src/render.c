@@ -31,7 +31,8 @@ static bool cursor_cap = false;
 
 static void redraw_normal(line_data *line);
 static void redraw_obscured(line_data *line);
-static void move_to_pos(line_data *line, uint32_t pos);
+static void move_to_pos_normal(line_data *line, uint32_t pos);
+static void move_to_pos_obscured(line_data *line, uint32_t pos);
 
 void nrl_render_init(nrl_echo_mode mode) {
 	echo_mode = mode;
@@ -64,12 +65,22 @@ void nrl_render_redraw(line_data *line) {
 }
 
 void nrl_render_sync_cursors(line_data *line) {
-	move_to_pos(line, line->cursor);
+	switch (echo_mode) {
+	case NRL_ECHO_ON:
+		move_to_pos_normal(line, line->cursor);
+		break;
+	case NRL_ECHO_OBSCURED:
+		move_to_pos_obscured(line, line->cursor);
+		break;
+	case NRL_ECHO_OFF:
+		break;
+	}
+
 	nrl_io_flush();
 }
 
 /**
- * @brief Redraw line in normal echo mode.
+ * @brief Redraw line (normal echo mode).
  *
  * @param[in] line - Line data.
  */
@@ -86,7 +97,7 @@ static void redraw_normal(line_data *line) {
 	uint32_t len = strlen(data);
 
 	// Move cursor to the beginning
-	move_to_pos(line, 0);
+	move_to_pos_normal(line, 0);
 
 	// Print line data
 	nrl_io_write(data, len);
@@ -108,12 +119,12 @@ static void redraw_normal(line_data *line) {
 	assert(width != -1);
 	last_rendered_width = width;
 
-	move_to_pos(line, line->cursor);
+	move_to_pos_normal(line, line->cursor);
 	free(data);
 }
 
 /**
- * @brief Redraw line in obscured echo mode.
+ * @brief Redraw line (obscured echo mode).
  *
  * @param[in] line - Line data.
  */
@@ -128,7 +139,7 @@ static void redraw_obscured(line_data *line) {
 	}
 
 	// Move cursor to the beginning
-	move_to_pos(line, 0);
+	move_to_pos_obscured(line, 0);
 
 	// Print line data
 	for (uint32_t i = 0; i < line->buffer.count - 1; i++) {
@@ -150,16 +161,16 @@ static void redraw_obscured(line_data *line) {
 	// Update for next cycle
 	last_rendered_width = line->render_cursor;
 
-	move_to_pos(line, line->cursor);
+	move_to_pos_obscured(line, line->cursor);
 }
 
 /**
- * @brief Move render cursor to an arbitrary position.
+ * @brief Move render cursor to an arbitrary position (normal rendering mode).
  *
  * @param[in] line - Line data.
  * @param[in] pos - Desired position.
  */
-static void move_to_pos(line_data *line, uint32_t pos) {
+static void move_to_pos_normal(line_data *line, uint32_t pos) {
 	int32_t offset = pos - line->render_cursor;
 	if (offset == 0) {
 		return;
@@ -190,6 +201,33 @@ static void move_to_pos(line_data *line, uint32_t pos) {
 			for (int i = 0; i < width; i++) {
 				nrl_io_write_escape(TIO_CURSOR_LEFT);
 			}
+		}
+	}
+
+	line->render_cursor = pos;
+}
+
+/**
+ * @brief Move render cursor to an arbitrary position (obscured rendering mode).
+ *
+ * @param[in] line - Line data.
+ * @param[in] pos - Desired position.
+ */
+static void move_to_pos_obscured(line_data *line, uint32_t pos) {
+	int32_t offset = pos - line->render_cursor;
+	if (offset == 0) {
+		return;
+	}
+
+	if (offset > 0) {
+		// Need to move right
+		for (int32_t i = 0; i < offset; i++) {
+			nrl_io_write_escape(TIO_CURSOR_RIGHT);
+		}
+	} else {
+		// Need to move left
+		for (int32_t i = 0; i < -offset; i++) {
+			nrl_io_write_escape(TIO_CURSOR_LEFT);
 		}
 	}
 
