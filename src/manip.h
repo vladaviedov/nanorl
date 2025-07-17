@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <c-utils/uchar.h>
 #include <c-utils/vector.h>
 
 #include "config.h"
@@ -41,13 +42,13 @@ typedef struct {
 } line_data;
 
 /**
- * @brief Insert ASCII characters into the line.
+ * @brief Insert text characters into the line.
  *
  * @param[in,out] line - Line data object.
  * @param[in] data - Characters to insert.
  * @param[in] length - Character count.
  */
-void nrl_manip_insert_ascii(line_data *line, const char *data, uint32_t length);
+void nrl_manip_insert_text(line_data *line, const uchar *data, uint32_t length);
 
 /**
  * @brief Evaluate an escape sequence.

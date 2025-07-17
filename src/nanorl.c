@@ -20,6 +20,7 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include <c-utils/uchar.h>
 #include <c-utils/vector.h>
 
 #include "dfa.h"
@@ -93,7 +94,7 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 	}
 
 	line_data line = {
-		.buffer = vec_init(sizeof(char)),
+		.buffer = vec_init(sizeof(uchar)),
 		.cursor = 0,
 		.render_cursor = 0,
 		.dirty = false,
@@ -120,10 +121,11 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 						= nrl_lookup_custom(read_buf.escape.custom);
 					for (uint32_t i = 0; i < strlen(as_text); i++) {
 						if (nrl_io_parse_control(as_text[i], &read_buf)) {
-							nrl_manip_insert_ascii(&line, read_buf.text,
-												   read_buf.length);
+							nrl_manip_insert_text(&line, read_buf.text,
+												  read_buf.length);
 						} else {
-							nrl_manip_insert_ascii(&line, as_text + i, 1);
+							uchar as_unicode = (uchar)(*(as_text + i));
+							nrl_manip_insert_text(&line, &as_unicode, 1);
 						}
 					}
 				}
@@ -187,7 +189,7 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 	}
 
 	// Terminate string
-	char null_char = '\0';
+	uchar null_char = 0;
 	vec_push(&line.buffer, &null_char);
 
 	// Interrupt condition
@@ -197,7 +199,12 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 		safe_assign(error, NRL_ERROR_OK);
 	}
 
-	return vec_collect(&line.buffer);
+	// Extract data as an regular string
+	uchar *uc_data = vec_collect(&line.buffer);
+	char *data = utf8_encode(uc_data);
+	free(uc_data);
+
+	return data;
 }
 
 char *nrl_readline(const char *prompt) {

@@ -47,8 +47,8 @@ static const escape_manip esc_manips[] = {
 static const nrl_escape_handler *escape_table[TIC_COUNT] = { NULL };
 #endif // CUSTOM_ESCAPES
 
-void nrl_manip_insert_ascii(line_data *line,
-							const char *data,
+void nrl_manip_insert_text(line_data *line,
+							const uchar *data,
 							uint32_t length) {
 	vector_status res
 		= vec_bulk_insert(&line->buffer, line->cursor, data, length);
