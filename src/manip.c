@@ -18,7 +18,7 @@
 #include <c-utils/vector.h>
 
 #include "escape.h"
-#include "io.h"
+#include "render.h"
 #include "terminfo.h"
 
 typedef struct {
@@ -134,21 +134,18 @@ static void escape_backspace(line_data *line) {
 static void escape_left(line_data *line) {
 	if (line->cursor > 0) {
 		line->cursor--;
-		line->render_cursor--;
-		nrl_io_write_escape(TIO_CURSOR_LEFT);
+		nrl_render_sync_cursors(line);
 	}
 }
 
 static void escape_right(line_data *line) {
 	if (line->cursor < line->buffer.count) {
 		line->cursor++;
-		line->render_cursor++;
-		nrl_io_write_escape(TIO_CURSOR_RIGHT);
+		nrl_render_sync_cursors(line);
 	}
 }
 
 static void escape_delete(line_data *line) {
-	// TODO: utf8 handling
 	// If cursor is at count, there is no character under the cursor
 	if (line->cursor < line->buffer.count) {
 		vector_status res = vec_erase(&line->buffer, line->cursor, NULL);
@@ -159,19 +156,11 @@ static void escape_delete(line_data *line) {
 }
 
 static void escape_home(line_data *line) {
-	for (uint32_t i = 0; i < line->cursor; i++) {
-		nrl_io_write_escape(TIO_CURSOR_LEFT);
-	}
-
 	line->cursor = 0;
-	line->render_cursor = 0;
+	nrl_render_sync_cursors(line);
 }
 
 static void escape_end(line_data *line) {
-	for (uint32_t i = line->cursor; i < line->buffer.count; i++) {
-		nrl_io_write_escape(TIO_CURSOR_RIGHT);
-	}
-
 	line->cursor = line->buffer.count;
-	line->render_cursor = line->buffer.count;
+	nrl_render_sync_cursors(line);
 }
