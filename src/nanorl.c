@@ -118,7 +118,9 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 					const char *as_text
 						= nrl_lookup_custom(read_buf.escape.custom);
 					for (uint32_t i = 0; i < strlen(as_text); i++) {
-						if (nrl_io_parse_control(as_text[i], &read_buf)) {
+						// ASCII is compatible with uchar
+						if (nrl_io_parse_control((uchar)as_text[i],
+												 &read_buf)) {
 							nrl_manip_insert_text(&line, read_buf.text,
 												  read_buf.length);
 						} else {

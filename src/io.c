@@ -86,7 +86,7 @@ input_type nrl_io_read(input_buf *buffer) {
 	}
 
 	// Check for unprintable control codes
-	if (!nrl_io_parse_control((char)uc, buffer)) {
+	if (!nrl_io_parse_control(uc, buffer)) {
 		// Character is printable: place it in buffer ourselves
 		buffer->text[0] = uc;
 		buffer->length = 1;
@@ -95,15 +95,15 @@ input_type nrl_io_read(input_buf *buffer) {
 	return INPUT_TEXT;
 }
 
-bool nrl_io_parse_control(char ascii, input_buf *buffer) {
+bool nrl_io_parse_control(uchar c, input_buf *buffer) {
 	// C0 codes are below 0x20
-	if (ascii >= 0x20) {
+	if (c >= 0x20) {
 		return false;
 	}
 
 	// Generally how C0 codes are represented
 	buffer->text[0] = '^';
-	buffer->text[1] = ascii + 0x40;
+	buffer->text[1] = c + 0x40;
 	buffer->length = 2;
 
 	return true;
