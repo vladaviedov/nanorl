@@ -171,40 +171,27 @@ static void redraw_obscured(line_data *line) {
  * @param[in] pos - Desired position.
  */
 static void move_to_pos_normal(line_data *line, uint32_t pos) {
-	int32_t offset = pos - line->render_cursor;
-	if (offset == 0) {
-		return;
-	}
+	bool dir_fwd = ((int32_t)pos - (int32_t)line->render_cursor) > 0;
+	while (line->render_cursor != pos) {
+		// Get width of character we are stepping over
+		uint32_t step_idx
+			= dir_fwd ? line->render_cursor : line->render_cursor - 1;
+		const uchar *step = vec_at(&line->buffer, step_idx);
+		int width = ucwidth(*step);
+		assert(width != -1);
 
-	if (offset > 0) {
-		// Need to move right
-		while (offset-- > 0) {
-			// Get width of character we are stepping over
-			const uchar *step = vec_at(&line->buffer, line->render_cursor);
-			int width = ucwidth(*step);
-			assert(width != -1);
-
-			// Move to the right
-			for (int i = 0; i < width; i++) {
-				nrl_io_write_escape(TIO_CURSOR_RIGHT);
-			}
+		// Move to the appropriate direction
+		for (uint32_t i = 0; i < (uint32_t)width; i++) {
+			nrl_io_write_escape(dir_fwd ? TIO_CURSOR_RIGHT : TIO_CURSOR_LEFT);
 		}
-	} else {
-		// Need to move left
-		while (offset++ < 0) {
-			// Get width of character we are stepping over
-			const uchar *step = vec_at(&line->buffer, line->render_cursor - 1);
-			int width = ucwidth(*step);
-			assert(width != -1);
 
-			// Move to the right
-			for (int i = 0; i < width; i++) {
-				nrl_io_write_escape(TIO_CURSOR_LEFT);
-			}
+		// Update cursor
+		if (dir_fwd) {
+			line->render_cursor++;
+		} else {
+			line->render_cursor--;
 		}
 	}
-
-	line->render_cursor = pos;
 }
 
 /**
@@ -214,21 +201,13 @@ static void move_to_pos_normal(line_data *line, uint32_t pos) {
  * @param[in] pos - Desired position.
  */
 static void move_to_pos_obscured(line_data *line, uint32_t pos) {
-	int32_t offset = pos - line->render_cursor;
-	if (offset == 0) {
-		return;
-	}
+	int32_t offset = (int32_t)pos - (int32_t)line->render_cursor;
+	bool dir_fwd = offset > 0;
+	uint32_t offset_abs = dir_fwd ? (uint32_t)offset : (uint32_t)(-offset);
 
-	if (offset > 0) {
-		// Need to move right
-		for (int32_t i = 0; i < offset; i++) {
-			nrl_io_write_escape(TIO_CURSOR_RIGHT);
-		}
-	} else {
-		// Need to move left
-		for (int32_t i = 0; i < -offset; i++) {
-			nrl_io_write_escape(TIO_CURSOR_LEFT);
-		}
+	// All characters are 1 wide
+	for (uint32_t i = 0; i < offset_abs; i++) {
+		nrl_io_write_escape(dir_fwd ? TIO_CURSOR_RIGHT : TIO_CURSOR_LEFT);
 	}
 
 	line->render_cursor = pos;
