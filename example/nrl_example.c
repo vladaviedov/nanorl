@@ -56,7 +56,7 @@ int main(void) {
 	// Escape handler
 	nrl_escape_handler tab_handler = {
 		.id = NRL_ESC_TAB,
-		.cursor_type = NRL_CT_BYTE,
+		.format = NRL_DF_UTF8,
 		.func = &tab_func,
 	};
 	nrl_escape_handler *handler_list[] = {
@@ -93,18 +93,18 @@ static const char *err_to_string(nrl_error err) {
 
 static nrl_state tab_func(const nrl_state *state, unused nrl_escape code) {
 	// Create new string with 4 more characters
-	uint32_t new_len = strlen(state->line) + 4 + 1;
+	uint32_t new_len = strlen(state->line.utf8_line) + 4 + 1;
 	char *modified = malloc(sizeof(char) * new_len);
 
 	// Add four spaces at cursor
-	strncpy(modified, state->line, state->cursor);
+	strncpy(modified, state->line.utf8_line, state->cursor);
 	modified[state->cursor] = '\0';
 	strcat(modified, "    ");
-	strcat(modified, state->line + state->cursor);
+	strcat(modified, state->line.utf8_line + state->cursor);
 
 	// Create state import object
 	nrl_state new_state = {
-		.line = modified,
+		.line.utf8_line = modified,
 		.cursor = state->cursor + 4,
 	};
 

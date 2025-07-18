@@ -20,11 +20,13 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include <c-utils/uchar.h>
 #include <c-utils/vector.h>
 
 #include "dfa.h"
 #include "io.h"
 #include "manip.h"
+#include "render.h"
 #include "terminfo.h"
 
 /**
@@ -93,20 +95,17 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 	}
 
 	line_data line = {
-		.buffer = vec_init(sizeof(char)),
+		.buffer = vec_init(sizeof(uchar)),
 		.cursor = 0,
 		.render_cursor = 0,
 		.dirty = false,
 	};
-	bool cursor_cap = nrl_cursor_capability();
 
 	input_type read_res;
 	input_buf read_buf;
 	while ((read_res = nrl_io_read(&read_buf)) != INPUT_STOP) {
-		uint32_t rendered_count = line.buffer.count;
-
-		if (read_res == INPUT_ASCII) {
-			nrl_manip_insert_ascii(&line, read_buf.text, read_buf.length);
+		if (read_res == INPUT_TEXT) {
+			nrl_manip_insert_text(&line, read_buf.text, read_buf.length);
 		} else if (read_res == INPUT_ESCAPE) {
 			nrl_manip_eval_escape(&line, read_buf.escape.input);
 		} else if (read_res == INPUT_CUSTOM_ESCAPE) {
@@ -119,11 +118,14 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 					const char *as_text
 						= nrl_lookup_custom(read_buf.escape.custom);
 					for (uint32_t i = 0; i < strlen(as_text); i++) {
-						if (nrl_io_parse_control(as_text[i], &read_buf)) {
-							nrl_manip_insert_ascii(&line, read_buf.text,
-												   read_buf.length);
+						// ASCII is compatible with uchar
+						if (nrl_io_parse_control((uchar)as_text[i],
+												 &read_buf)) {
+							nrl_manip_insert_text(&line, read_buf.text,
+												  read_buf.length);
 						} else {
-							nrl_manip_insert_ascii(&line, as_text + i, 1);
+							uchar as_unicode = (uchar)(*(as_text + i));
+							nrl_manip_insert_text(&line, &as_unicode, 1);
 						}
 					}
 				}
@@ -134,43 +136,8 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 
 		// Perform a full re-render
 		if (!read_buf.more && line.dirty) {
-			if (!cursor_cap) {
-				// On dumb terminals, only echo the unprinted chars
-				nrl_io_write(line.buffer.data + line.render_cursor,
-							 line.cursor - line.render_cursor);
-			} else {
-				// Move cursor to the beginning
-				for (uint32_t i = 0; i < line.render_cursor; i++) {
-					nrl_io_write_escape(TIO_CURSOR_LEFT);
-				}
-
-				// Print line data
-				if (config->echo_mode == NRL_ECHO_OBSCURED) {
-					for (uint32_t i = 0; i < line.buffer.count; i++) {
-						nrl_io_write("*", 1);
-					}
-				} else {
-					nrl_io_write(line.buffer.data, line.buffer.count);
-				}
-				uint32_t printed_count = line.buffer.count;
-
-				// Account for erased characters
-				for (uint32_t i = line.buffer.count; i < rendered_count; i++) {
-					nrl_io_write(" ", 1);
-					printed_count++;
-				}
-
-				// Move cursor to correct location
-				for (uint32_t i = printed_count; i > line.cursor; i--) {
-					nrl_io_write_escape(TIO_CURSOR_LEFT);
-				}
-			}
-
-			line.dirty = false;
-			line.render_cursor = line.cursor;
+			nrl_render_redraw(&line);
 		}
-
-		nrl_io_flush();
 	}
 
 	if (!deinit(config)) {
@@ -187,7 +154,7 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 	}
 
 	// Terminate string
-	char null_char = '\0';
+	uchar null_char = 0;
 	vec_push(&line.buffer, &null_char);
 
 	// Interrupt condition
@@ -197,7 +164,12 @@ char *nanorl(const nrl_config *config, nrl_error *error) {
 		safe_assign(error, NRL_ERROR_OK);
 	}
 
-	return vec_collect(&line.buffer);
+	// Extract data as an regular string
+	uchar *uc_data = vec_collect(&line.buffer);
+	char *data = utf8_encode(uc_data);
+	free(uc_data);
+
+	return data;
 }
 
 char *nrl_readline(const char *prompt) {
@@ -286,6 +258,7 @@ static bool init(const nrl_config *config) {
 	// IO initialization
 	nrl_io_echo_state(true);
 	nrl_io_init(config->read_file, config->echo_file, config->preload);
+	nrl_render_init(config->echo_mode);
 	if (!config->assume_smkx) {
 		if (!nrl_io_write_escape(TIO_KEYPAD_XMIT)) {
 			return false;

@@ -11,6 +11,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <c-utils/uchar.h>
+
 #include "dfa.h"
 #include "terminfo.h"
 
@@ -36,8 +38,7 @@
  * End condition received.
  */
 typedef enum {
-	INPUT_ASCII,
-	INPUT_UTF8,
+	INPUT_TEXT,
 	INPUT_ESCAPE,
 	INPUT_CUSTOM_ESCAPE,
 	INPUT_STOP,
@@ -69,7 +70,7 @@ typedef enum {
 typedef struct {
 	dfa_acceptor escape;
 	bool eof;
-	char text[SINGLE_BUF_SIZE];
+	uchar text[SINGLE_BUF_SIZE];
 	uint32_t length;
 	bool more;
 } input_buf;
@@ -95,12 +96,12 @@ input_type nrl_io_read(input_buf *buffer);
  * @brief Check if the input is a C0 code and if so, populate buffer with a
  * printable representation.
  *
- * @param[in] ascii - ASCII character.
+ * @param[in] c - Character.
  * @param[out] buffer - Buffer for input.
  * @return true - Character is a C0 code; buffer populated. \n
  *         false - Character is printable.
  */
-bool nrl_io_parse_control(char ascii, input_buf *buffer);
+bool nrl_io_parse_control(uchar c, input_buf *buffer);
 
 /**
  * @brief Write data to output (with buffering).
