@@ -155,6 +155,7 @@ bool nrl_manip_eval_custom(line_data *line, terminfo_custom escape) {
 			line->cursor = adjust + 1;
 		}
 
+		free(uc_line);
 		free(uc_before_cursor);
 		free(export_data.line.utf8_line);
 		free(import_data.line.utf8_line);
