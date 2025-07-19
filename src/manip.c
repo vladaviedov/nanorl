@@ -98,6 +98,12 @@ bool nrl_manip_eval_custom(line_data *line, terminfo_custom escape) {
 		return false;
 	}
 
+	// We lose the original string data here, so we need to reset the cursor
+	// position
+	uint32_t saved_cursor = line->cursor;
+	line->cursor = 0;
+	nrl_render_sync_cursors(line);
+
 	// Add null-char to end of the string
 	uchar null_char = 0;
 	vec_push(&line->buffer, &null_char);
@@ -107,14 +113,14 @@ bool nrl_manip_eval_custom(line_data *line, terminfo_custom escape) {
 	uchar *uc_line = vec_collect(&line->buffer);
 	if (handler->format == NRL_DF_UTF32) {
 		export_data.line.utf32_line = uc_line;
-		export_data.cursor = line->cursor;
+		export_data.cursor = saved_cursor;
 	} else {
 		export_data.line.utf8_line = utf8_encode(uc_line);
 
 		// To calculate byte cursor, we can replace the selected uchar with a
 		// null, encode the string in UTF-8 and check its length. I don't see
 		// a more efficient way to do this.
-		uc_line[line->cursor] = 0;
+		uc_line[saved_cursor] = 0;
 		char *utf8_before_cursor = utf8_encode(uc_line);
 		export_data.cursor = strlen(utf8_before_cursor);
 
