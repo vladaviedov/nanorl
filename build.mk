@@ -55,7 +55,6 @@ $(TARGET_EXAMPLE): LDFLAGS=$(TARGET_STATIC)
 $(TARGET_EXAMPLE): example/nrl_example.c $(TARGET_STATIC)
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
-.PHONY: $(LIBUTILS)
 $(LIBUTILS): lib/c-utils
 	$(MAKE) -C $< $(TASK) \
 		CONFIG_PATH=$(LIBUTILS_CONFIG) \
