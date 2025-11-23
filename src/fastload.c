@@ -31,6 +31,7 @@ static const char *xterm_outputs_stub[TIO_COUNT] = {
 	"\033[?1h\033=",
 };
 static const char *xterm_specials_stub[TIS_COUNT] = {
+	"\033[%i%p1%d;%p2%dH",
 	"\033[%i%d;%dR",
 	"\033[6n",
 };

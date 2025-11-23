@@ -61,6 +61,7 @@ typedef enum {
  * Internal identifiers for terminfo special sequences.
  */
 typedef enum {
+	TIS_CURSOR_ADDRESS,
 	TIS_USER6,
 	TIS_USER7,
 } terminfo_special;
@@ -69,7 +70,7 @@ typedef enum {
  * @def TIS_COUNT
  * Total entries in @ref terminfo_special.
  */
-#define TIS_COUNT 2
+#define TIS_COUNT 3
 
 /**
  * @brief Find and load terminfo data for the user's terminal.

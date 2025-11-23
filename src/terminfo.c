@@ -103,6 +103,7 @@ static const uint32_t output_seq_indices[] = {
  * @note Reference: ncurses source 'include/Caps' or generated 'term.h'
  */
 static const uint32_t special_seq_indices[] = {
+	10u,  // cursor_address
 	293u, // user6
 	294u, // user7
 };
