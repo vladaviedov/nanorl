@@ -65,7 +65,7 @@ static const char *sysdb_path[] = {
  * Indices into the strings terminfo array for input escape sequences.
  * @note Reference: ncurses source 'include/Caps' or generated 'term.h'
  */
-static const uint8_t input_seq_indices[] = {
+static const uint32_t input_seq_indices[] = {
 	79u,  // key_left
 	83u,  // key_right
 	55u,  // key_backspace
@@ -79,7 +79,7 @@ static const uint8_t input_seq_indices[] = {
  * Indices into the strings terminfo array for input escape sequences.
  * @note Reference: ncurses source 'include/Caps' or generated 'term.h'
  */
-static const uint8_t custom_seq_indices[] = {
+static const uint32_t custom_seq_indices[] = {
 	87u,  // key_up
 	61u,  // key_down
 	134u, // tab
@@ -90,11 +90,11 @@ static const uint8_t custom_seq_indices[] = {
  * Indices into the strings terminfo array for output escape sequences.
  * @note Reference: ncurses source 'include/Caps' or generated 'term.h'
  */
-static const uint8_t output_seq_indices[] = {
+static const uint32_t output_seq_indices[] = {
 	14u, // cursor_left
 	17u, // cursor_right,
 	88u, // keypad_local
-	89u  // keypad_xmit
+	89u, // keypad_xmit
 };
 
 static bool attempted_load = false;
@@ -109,7 +109,7 @@ static FILE *try_open(const char *db_path, const char *term);
 static bool parse(FILE *terminfo);
 static void lookup_strings(const int16_t *strings,
 						   const char *strings_table,
-						   const uint8_t *indices,
+						   const uint32_t *indices,
 						   uint32_t length,
 						   char **buf);
 
@@ -306,7 +306,7 @@ static bool parse(FILE *terminfo) {
  */
 static void lookup_strings(const int16_t *strings,
 						   const char *strings_table,
-						   const uint8_t *indices,
+						   const uint32_t *indices,
 						   uint32_t length,
 						   char **buf) {
 	for (uint32_t i = 0; i < length; i++) {
