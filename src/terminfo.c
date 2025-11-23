@@ -97,12 +97,23 @@ static const uint32_t output_seq_indices[] = {
 	89u, // keypad_xmit
 };
 
+/**
+ * @var special_seq_indices
+ * Indices into the strings terminfo array for special escape sequences.
+ * @note Reference: ncurses source 'include/Caps' or generated 'term.h'
+ */
+static const uint32_t special_seq_indices[] = {
+	293u, // user6
+	294u, // user7
+};
+
 static bool attempted_load = false;
 static bool load_result = false;
 
 static char *inputs[TII_COUNT] = { NULL };
 static char *customs[TIC_COUNT] = { NULL };
 static char *outputs[TIO_COUNT] = { NULL };
+static char *specials[TIS_COUNT] = { NULL };
 
 static FILE *find_entry(const char *term);
 static FILE *try_open(const char *db_path, const char *term);
@@ -128,7 +139,8 @@ bool nrl_load_terminfo(void) {
 
 #if FASTLOAD == 1
 	if (strstr(env_term, "xterm")) {
-		nrl_fl_xterm((char **)&inputs, (char **)&customs, (char **)&outputs);
+		nrl_fl_xterm((char **)&inputs, (char **)&customs, (char **)&outputs,
+					 (char **)&specials);
 		return true;
 	}
 #endif // FASTLOAD
@@ -152,6 +164,10 @@ const char *nrl_lookup_custom(terminfo_custom id) {
 
 const char *nrl_lookup_output(terminfo_output id) {
 	return outputs[id];
+}
+
+const char *nrl_lookup_special(terminfo_special id) {
+	return specials[id];
 }
 
 bool nrl_cursor_capability(void) {
@@ -292,6 +308,8 @@ static bool parse(FILE *terminfo) {
 				   customs);
 	lookup_strings(strings, strings_table, output_seq_indices, TIO_COUNT,
 				   outputs);
+	lookup_strings(strings, strings_table, special_seq_indices, TIS_COUNT,
+				   specials);
 
 	return true;
 }

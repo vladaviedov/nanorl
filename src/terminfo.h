@@ -57,6 +57,21 @@ typedef enum {
 #define TIO_COUNT 4
 
 /**
+ * @enum terminfo_special
+ * Internal identifiers for terminfo special sequences.
+ */
+typedef enum {
+	TIS_USER6,
+	TIS_USER7,
+} terminfo_special;
+
+/**
+ * @def TIS_COUNT
+ * Total entries in @ref terminfo_special.
+ */
+#define TIS_COUNT 2
+
+/**
  * @brief Find and load terminfo data for the user's terminal.
  *
  * @return true - Success.\n
@@ -90,6 +105,15 @@ const char *nrl_lookup_custom(terminfo_custom id);
  * @note Should only be called after nrl_load_terminfo.
  */
 const char *nrl_lookup_output(terminfo_output id);
+
+/**
+ * @brief Get ASCII string for special escape sequence.
+ *
+ * @param[in] id - Interal identifier.
+ * @return ASCII representation, null-terminated string.
+ * @note Should only be called after nrl_load_terminfo.
+ */
+const char *nrl_lookup_special(terminfo_special id);
 
 /**
  * @brief Check the cursor movement is availiable on this terminal.

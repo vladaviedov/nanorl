@@ -17,6 +17,10 @@
  * @param[out] inputs - Input storage to fill.
  * @param[out] customs - Custom storage to fill.
  * @param[out] outputs - Output storage to fill.
+ * @param[out] specials - Special storage to fill.
  */
-void nrl_fl_xterm(char **inputs, char **customs, char **outputs);
+void nrl_fl_xterm(char **inputs,
+				  char **customs,
+				  char **outputs,
+				  char **specials);
 #endif // FASTLOAD
