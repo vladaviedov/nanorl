@@ -129,6 +129,7 @@ bool nrl_load_terminfo(void) {
 #if FASTLOAD == 1
 	if (strstr(env_term, "xterm")) {
 		nrl_fl_xterm((char **)&inputs, (char **)&customs, (char **)&outputs);
+		return true;
 	}
 #endif // FASTLOAD
 
