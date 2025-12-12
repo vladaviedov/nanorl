@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 
 #include <c-utils/uchar.h>
 #include <c-utils/ucwidth.h>
@@ -28,16 +29,50 @@ static nrl_echo_mode echo_mode;
 static uint32_t last_rendered_width = 0;
 // Cursor capabilities
 static bool cursor_cap = false;
+// Echo file descriptor
+static int echo_fd = -1;
+
+// Terminal dimentions
+static uint32_t term_rows = 0;
+static uint32_t term_cols = 0;
 
 static void redraw_normal(line_data *line);
 static void redraw_obscured(line_data *line);
 static void move_to_pos_normal(line_data *line, uint32_t pos);
 static void move_to_pos_obscured(line_data *line, uint32_t pos);
 
-void nrl_render_init(nrl_echo_mode mode) {
+void nrl_render_init(nrl_echo_mode mode, int echo_file) {
 	echo_mode = mode;
 	last_rendered_width = 0;
 	cursor_cap = nrl_cursor_capability();
+	echo_fd = echo_file;
+}
+
+bool nrl_render_query_size(void) {
+#if defined(TIOCGWINSZ)
+	struct winsize size;
+
+	if (ioctl(echo_fd, TIOCGWINSZ, &size) == 0) {
+		term_rows = size.ws_row;
+		term_cols = size.ws_col;
+		return true;
+	}
+#elif defined(TIOCGSIZE)
+	struct ttysize size;
+
+	if (ioctl(config->echo_file, TIOCGSIZE, &size) == 0) {
+		*rows = size.ts_row;
+		*cols = size.ts_col;
+		return true;
+	}
+#endif
+
+	// Method 2: cursor position report (CPR) request
+	// This is terminal dependent and does not rely on system APIs
+	// Fallback way for terminals which support this
+	// TODO: implement
+
+	return false;
 }
 
 void nrl_render_redraw(line_data *line) {

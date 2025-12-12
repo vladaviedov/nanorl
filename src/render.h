@@ -15,8 +15,17 @@
  * @brief Initialize render module.
  *
  * @param[in] mode - Echo mode.
+ * @param[in] echo_file - Echo file descriptor.
  */
-void nrl_render_init(nrl_echo_mode mode);
+void nrl_render_init(nrl_echo_mode mode, int echo_file);
+
+/**
+ * @brief Update stored terminal dimensions.
+ *
+ * @return true - Successfully update dimensions.\n
+ *         false - All methods failed.
+ */
+bool nrl_render_query_size(void);
 
 /**
  * @brief Redraw the line.
