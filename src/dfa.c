@@ -114,7 +114,7 @@ parse_next:
 	}
 }
 
-#if DFA_DEBUG == 1
+#if DEBUG == 1
 #include <stdio.h>
 
 void print_helper(const dfa_node *node, uint32_t indent) {
@@ -140,7 +140,7 @@ void print_helper(const dfa_node *node, uint32_t indent) {
 void nrl_dfa_print(void) {
 	print_helper(&root, 0);
 }
-#endif
+#endif // DEBUG
 
 /**
  * @brief Insert a new sequence into the DFA tree.

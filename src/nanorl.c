@@ -226,9 +226,9 @@ static bool init(const nrl_config *config) {
 		nrl_dfa_build();
 	}
 
-#if DFA_DEBUG == 1
+#if DEBUG == 1
 	nrl_dfa_print();
-#endif // DFA_DEBUG
+#endif // DEBUG
 
 	if (isatty(config->read_file)) {
 		if (tcgetattr(config->read_file, &old_attrs) < 0) {

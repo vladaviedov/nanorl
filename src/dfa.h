@@ -61,9 +61,9 @@ void nrl_dfa_build(void);
  */
 dfa_result nrl_dfa_parse(char (*next_char)(), dfa_acceptor *accept_buf);
 
-#if DFA_DEBUG == 1
+#if DEBUG == 1
 /**
  * @brief Print DFA tree to standard out.
  */
 void nrl_dfa_print(void);
-#endif // DFA_DEBUG
+#endif // DEBUG

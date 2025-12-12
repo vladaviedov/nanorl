@@ -24,9 +24,9 @@
 #define TERMINFO_COMMON 1
 #endif // TERMINFO_COMMON
 
-#ifndef DFA_DEBUG
-#define DFA_DEBUG 0
-#endif // DFA_DEBUG
+#ifndef DEBUG
+#define DEBUG 0
+#endif // DEBUG
 
 #ifndef FASTLOAD
 #define FASTLOAD 1
