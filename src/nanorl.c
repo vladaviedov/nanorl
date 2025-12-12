@@ -52,6 +52,7 @@ static struct sigaction old_sighup_sa;
 static struct sigaction old_sigint_sa;
 static struct sigaction old_sigterm_sa;
 static struct sigaction old_sigquit_sa;
+static struct sigaction old_sigwinch_sa;
 
 /**
  * Storage for signal numbers receieved.
@@ -77,7 +78,8 @@ static const nrl_config default_conf = {
 		*var_ptr = val;                                                        \
 	}
 
-static void sig_handle(int code);
+static void sigwinch_handler(int code);
+static void generic_handler(int code);
 static bool check_args(const nrl_config *config);
 static bool init(const nrl_config *config);
 static bool deinit(const nrl_config *config);
@@ -183,11 +185,20 @@ nrl_config nrl_default_config(void) {
 }
 
 /**
- * @brief Signal handler for all signals.
+ * @brief Signal handler for SIGWINCH.
  *
  * @param[in] code - Signal code.
  */
-static void sig_handle(int code) {
+static void sigwinch_handler(int code) {
+	nrl_render_query_size();
+}
+
+/**
+ * @brief Signal handler for all signals (except SIGWINCH).
+ *
+ * @param[in] code - Signal code.
+ */
+static void generic_handler(int code) {
 	intr_code = code;
 }
 
@@ -242,11 +253,21 @@ static bool init(const nrl_config *config) {
 		}
 	}
 
-	// Setup signals
+	// Setup sigwinch signal
+	struct sigaction nrl_sigwinch_sa;
+	sigemptyset(&nrl_sigwinch_sa.sa_mask);
+	nrl_sigwinch_sa.sa_flags = SA_RESTART;
+	nrl_sigwinch_sa.sa_handler = &sigwinch_handler;
+
+	if (sigaction(SIGWINCH, &nrl_sigwinch_sa, &old_sigwinch_sa) < 0) {
+		return false;
+	}
+
+	// Setup other signals
 	struct sigaction nrl_sa;
 	sigemptyset(&nrl_sa.sa_mask);
 	nrl_sa.sa_flags = 0;
-	nrl_sa.sa_handler = &sig_handle;
+	nrl_sa.sa_handler = &generic_handler;
 
 	if (sigaction(SIGHUP, &nrl_sa, &old_sighup_sa) < 0
 		|| sigaction(SIGINT, &nrl_sa, &old_sigint_sa) < 0
@@ -258,7 +279,7 @@ static bool init(const nrl_config *config) {
 	// IO initialization
 	nrl_io_echo_state(true);
 	nrl_io_init(config->read_file, config->echo_file, config->preload);
-	nrl_render_init(config->echo_mode);
+	nrl_render_init(config->echo_mode, config->echo_file);
 	if (!config->assume_smkx) {
 		if (!nrl_io_write_escape(TIO_KEYPAD_XMIT)) {
 			return false;
@@ -280,6 +301,7 @@ static bool init(const nrl_config *config) {
 #endif // CUSTOM_ESCAPES
 
 	nrl_io_echo_state(config->echo_mode != NRL_ECHO_OFF);
+	nrl_render_query_size();
 	return nrl_io_flush();
 }
 
@@ -305,7 +327,8 @@ static bool deinit(const nrl_config *config) {
 	if (sigaction(SIGHUP, &old_sighup_sa, NULL) < 0
 		|| sigaction(SIGINT, &old_sigint_sa, NULL) < 0
 		|| sigaction(SIGTERM, &old_sigterm_sa, NULL) < 0
-		|| sigaction(SIGQUIT, &old_sigquit_sa, NULL) < 0) {
+		|| sigaction(SIGQUIT, &old_sigquit_sa, NULL) < 0
+		|| sigaction(SIGWINCH, &old_sigwinch_sa, NULL) < 0) {
 		return false;
 	}
 
