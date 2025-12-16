@@ -25,10 +25,7 @@ static const char *xterm_customs_stub[TIC_COUNT] = {
 	"\t",
 };
 static const char *xterm_outputs_stub[TIO_COUNT] = {
-	"\b",
-	"\033[C",
-	"\033[?1l\033>",
-	"\033[?1h\033=",
+	"\b", "\033[C", "\n", "\033[A", "\033[?1l\033>", "\033[?1h\033=",
 };
 static const char *xterm_specials_stub[TIS_COUNT] = {
 	"\033[%i%p1%d;%p2%dH",

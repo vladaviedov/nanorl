@@ -46,6 +46,8 @@ typedef nrl_escape terminfo_custom;
 typedef enum {
 	TIO_CURSOR_LEFT,
 	TIO_CURSOR_RIGHT,
+	TIO_CURSOR_DOWN,
+	TIO_CURSOR_UP,
 	TIO_KEYPAD_LOCAL,
 	TIO_KEYPAD_XMIT,
 } terminfo_output;
@@ -54,7 +56,7 @@ typedef enum {
  * @def TIO_COUNT
  * Total entries in @ref terminfo_output.
  */
-#define TIO_COUNT 4
+#define TIO_COUNT 6
 
 /**
  * @enum terminfo_special
