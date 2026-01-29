@@ -9,10 +9,12 @@
 #define _POSIX_C_SOURCE 200809L
 #include "format.h"
 
+#include <assert.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <c-utils/stack.h>
@@ -90,4 +92,71 @@ char *nrl_terminfo_string_format(const char *fmt, uint32_t arg_count, ...) {
 
 	stack_deinit(&st);
 	return vec_collect(&out);
+}
+
+bool nrl_terminfo_string_parse2(const char *fmt,
+								const char *data,
+								int32_t *p1,
+								int32_t *p2) {
+	// Parser state
+	bool i_flag = false;
+	uint32_t current_p = 0;
+
+	char c;
+	while ((c = *fmt++) != '\0') {
+		// Data string is not the right size
+		if (*data == '\0') {
+			return false;
+		}
+
+		if (c != '%') {
+			// Check that format literal matches data literal
+			if (c != *data++) {
+				return false;
+			}
+			continue;
+		}
+
+		// TODO: implemeent other cases
+		c = *fmt++;
+		switch (c) {
+		case 'i':
+			// Increment first two args
+			i_flag = true;
+			break;
+		case 'd': {
+			// Try parse integer
+			char *endptr;
+			int32_t *target;
+
+			switch (current_p) {
+			case 0:
+				target = p1;
+				break;
+			case 1:
+				target = p2;
+				break;
+			default:
+				return false;
+			}
+
+			*target = strtol(data, &endptr, 10);
+			if (*target == 0) {
+				return false;
+			}
+
+			current_p++;
+			data = endptr;
+
+			break;
+		}
+		}
+	}
+
+	if (i_flag) {
+		(*p1)--;
+		(*p2)--;
+	}
+
+	return true;
 }
