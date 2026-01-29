@@ -2,7 +2,7 @@
  * @file io.c
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
- * @date 2024-2025
+ * @date 2024-2026
  * @license LGPLv3.0
  * @brief Input and output processing.
  */
@@ -93,6 +93,13 @@ input_type nrl_io_read(input_buf *buffer) {
 	}
 
 	return INPUT_TEXT;
+}
+
+ssize_t nrl_io_raw_read(char *buffer, uint32_t buf_size) {
+	assert(read_file != -1);
+	assert(buf_size > 0);
+
+	return read(read_file, buffer, buf_size);
 }
 
 bool nrl_io_parse_control(uchar c, input_buf *buffer) {
@@ -253,7 +260,7 @@ static uchar next_uchar(void) {
  * @return Actual amount of bytes read.
  */
 static ssize_t read_wrapper(int fd, char *buf, size_t count) {
-	assert(read_file != -1);
+	assert(fd != -1);
 	assert(count > 0);
 
 	if (preload_data != NULL) {

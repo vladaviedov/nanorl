@@ -2,7 +2,7 @@
  * @file io.h
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
- * @date 2024-2025
+ * @date 2024-2026
  * @license LGPLv3.0
  * @brief Input and output processing.
  */
@@ -10,6 +10,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <unistd.h>
 
 #include <c-utils/uchar.h>
 
@@ -91,6 +92,15 @@ void nrl_io_init(int read_fd, int echo_fd, const char *preload);
  * @return Type of input saved into buffer.
  */
 input_type nrl_io_read(input_buf *buffer);
+
+/**
+ * @brief Perform a read bypassing buffering and DFA.
+ *
+ * @param[out] buffer - Data buffer.
+ * @param[in] buf_size - Data buffer size.
+ * @return Bytes read.
+ */
+ssize_t nrl_io_raw_read(char *buffer, uint32_t buf_size);
 
 /**
  * @brief Check if the input is a C0 code and if so, populate buffer with a
