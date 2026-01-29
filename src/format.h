@@ -18,6 +18,7 @@
  * @param[in] arg_count - Argument count.
  * @param[in] ... - Argument list.
  * @return Formatted output.
+ * @note Caller responsible for freeing the return value.
  */
 char *nrl_terminfo_string_format(const char *fmt, uint32_t arg_count, ...);
 
