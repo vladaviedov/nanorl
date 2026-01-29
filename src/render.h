@@ -2,7 +2,7 @@
  * @file render.h
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
- * @date 2025
+ * @date 2025-2026
  * @license LGPLv3.0
  * @brief Line rendering.
  */
@@ -20,12 +20,9 @@
 void nrl_render_init(nrl_echo_mode mode, int echo_file);
 
 /**
- * @brief Update stored terminal dimensions.
- *
- * @return true - Successfully update dimensions.\n
- *         false - All methods failed.
+ * @brief Notify renderer about terminal being resized.
  */
-bool nrl_render_query_size(void);
+void nrl_render_notify_resize(void);
 
 /**
  * @brief Redraw the line.

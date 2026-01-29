@@ -2,13 +2,14 @@
  * @file render.c
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
- * @date 2025
+ * @date 2025-2026
  * @license LGPLv3.0
  * @brief Line rendering.
  */
 #include "render.h"
 
 #include <assert.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -18,10 +19,18 @@
 #include <c-utils/uchar.h>
 #include <c-utils/ucwidth.h>
 
+#include "format.h"
 #include "io.h"
 #include "manip.h"
 #include "nanorl.h"
 #include "terminfo.h"
+
+#define CPR_RES_BUF_SIZE 512
+
+typedef struct {
+	uint32_t row;
+	uint32_t col;
+} pos_2d;
 
 // Current echo mode
 static nrl_echo_mode echo_mode;
@@ -31,48 +40,33 @@ static uint32_t last_rendered_width = 0;
 static bool cursor_cap = false;
 // Echo file descriptor
 static int echo_fd = -1;
+// Resize signal received
+volatile sig_atomic_t resize_flag = false;
 
 // Terminal dimentions
-static uint32_t term_rows = 0;
-static uint32_t term_cols = 0;
+static pos_2d term_size = { .row = 0, .col = 0 };
+// Start position
+static pos_2d start_pos = { .row = 0, .col = 0 };
 
 static void redraw_normal(line_data *line);
 static void redraw_obscured(line_data *line);
 static void move_to_pos_normal(line_data *line, uint32_t pos);
 static void move_to_pos_obscured(line_data *line, uint32_t pos);
+static bool query_size(pos_2d *buf);
+static bool query_cursor(pos_2d *buf);
+static bool move_cursor_2d(const pos_2d *location);
 
 void nrl_render_init(nrl_echo_mode mode, int echo_file) {
 	echo_mode = mode;
 	last_rendered_width = 0;
 	cursor_cap = nrl_cursor_capability();
 	echo_fd = echo_file;
+
+	query_size(&term_size);
 }
 
-bool nrl_render_query_size(void) {
-#if defined(TIOCGWINSZ)
-	struct winsize size;
-
-	if (ioctl(echo_fd, TIOCGWINSZ, &size) == 0) {
-		term_rows = size.ws_row;
-		term_cols = size.ws_col;
-		return true;
-	}
-#elif defined(TIOCGSIZE)
-	struct ttysize size;
-
-	if (ioctl(config->echo_file, TIOCGSIZE, &size) == 0) {
-		*rows = size.ts_row;
-		*cols = size.ts_col;
-		return true;
-	}
-#endif
-
-	// Method 2: cursor position report (CPR) request
-	// This is terminal dependent and does not rely on system APIs
-	// Fallback way for terminals which support this
-	// TODO: implement
-
-	return false;
+void nrl_render_notify_resize(void) {
+	resize_flag = true;
 }
 
 void nrl_render_redraw(line_data *line) {
@@ -246,4 +240,123 @@ static void move_to_pos_obscured(line_data *line, uint32_t pos) {
 	}
 
 	line->render_cursor = pos;
+}
+
+/**
+ * @brief Query terminal dimensions.
+ *
+ * @param[out] buf - Position buffer.
+ * @return true - Successfully update dimensions.\n
+ *         false - All methods failed.
+ */
+static bool query_size(pos_2d *buf) {
+// Method 1: ioctl kernel request
+// This behavior is not POSIX standard, but is implemented on Linux & BSD
+#if defined(TIOCGWINSZ)
+	// Modern API
+	struct winsize size;
+
+	if (ioctl(echo_fd, TIOCGWINSZ, &size) == 0) {
+		buf->row = size.ws_row;
+		buf->col = size.ws_col;
+		return true;
+	}
+#elif defined(TIOCGSIZE)
+	// Old API
+	struct ttysize size;
+
+	if (ioctl(config->echo_file, TIOCGSIZE, &size) == 0) {
+		*rows = size.ts_row;
+		*cols = size.ts_col;
+		return true;
+	}
+#endif
+
+	// Method 2: cursor position report (CPR) request
+	// This is terminal dependent and does not rely on system APIs
+	// Fallback way for terminals which support this
+
+	// Save cursor position
+	pos_2d saved_pos;
+	if (!query_cursor(&saved_pos)) {
+		return false;
+	}
+
+	// Check the cursor position after moving it all the way to the end
+	pos_2d end_pos = { .row = 9999, .col = 9999 };
+	if (!move_cursor_2d(&end_pos)) {
+		return false;
+	}
+	if (!query_cursor(buf)) {
+		return false;
+	}
+
+	// Restore old position
+	if (!move_cursor_2d(&saved_pos)) {
+		return false;
+	}
+
+	// Cursor position comes back 0-indexed, so need to increment dimenions
+	buf->row++;
+	buf->col++;
+
+	return true;
+}
+
+/**
+ * @brief Query cursor location from the terminal.
+ *
+ * @param[out] buf - Current cursor position.
+ * @return true - Request succeeded.
+ *         false - Request failed.
+ */
+static bool query_cursor(pos_2d *buf) {
+	// Request CPR
+	const char *cpr_req = nrl_lookup_special(TIS_USER7);
+	if (!nrl_io_write(cpr_req, strlen(cpr_req)) || !nrl_io_flush()) {
+		return false;
+	}
+
+	// Read in CPR response
+	char res_buf[CPR_RES_BUF_SIZE];
+	ssize_t res_size = nrl_io_raw_read(res_buf, CPR_RES_BUF_SIZE);
+	if (res_size < 0) {
+		return false;
+	}
+	assert(res_size != CPR_RES_BUF_SIZE);
+	res_buf[res_size] = '\0';
+
+	// Parse CPR response
+	int32_t row_buf;
+	int32_t col_buf;
+	nrl_terminfo_string_parse2(nrl_lookup_special(TIS_USER6), res_buf, &row_buf,
+							   &col_buf);
+
+	// Save to buffer
+	assert(row_buf >= 0);
+	assert(col_buf >= 0);
+	buf->row = (uint32_t)row_buf;
+	buf->col = (uint32_t)col_buf;
+
+	return true;
+}
+
+/**
+ * @brief Request terminal to move cursor to a coordinate.
+ *
+ * @param[in] location - Coordinate to move to.
+ * @return true - Request succeeded.\n
+ *         false - Request failed.
+ */
+static bool move_cursor_2d(const pos_2d *location) {
+	const char *format = nrl_lookup_special(TIS_CURSOR_ADDRESS);
+	char *move_cmd
+		= nrl_terminfo_string_format(format, 2, location->row, location->col);
+
+	if (!nrl_io_write(move_cmd, strlen(move_cmd))) {
+		return false;
+	}
+	free(move_cmd);
+
+	return nrl_io_flush();
 }

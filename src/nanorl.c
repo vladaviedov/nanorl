@@ -2,7 +2,7 @@
  * @file nanorl.c
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
- * @date 2024-2025
+ * @date 2024-2026
  * @license LGPLv3.0
  * @brief Small line editing library.
  */
@@ -190,7 +190,7 @@ nrl_config nrl_default_config(void) {
  * @param[in] code - Signal code.
  */
 static void sigwinch_handler(int code) {
-	nrl_render_query_size();
+	nrl_render_notify_resize();
 }
 
 /**
@@ -301,7 +301,6 @@ static bool init(const nrl_config *config) {
 #endif // CUSTOM_ESCAPES
 
 	nrl_io_echo_state(config->echo_mode != NRL_ECHO_OFF);
-	nrl_render_query_size();
 	return nrl_io_flush();
 }
 
