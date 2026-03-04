@@ -37,32 +37,46 @@ static nrl_echo_mode echo_mode;
 // Width of line rendered last redraw
 static uint32_t last_rendered_width = 0;
 // Cursor capabilities
-static bool cursor_cap = false;
+static bool term_smart = false;
 // Echo file descriptor
 static int echo_fd = -1;
 // Resize signal received
 volatile sig_atomic_t resize_flag = false;
 
-// Terminal dimentions
+// Terminal dimensions
 static pos_2d term_size = { .row = 0, .col = 0 };
+// In-memory cursor position
+static pos_2d cursor_pos = { .row = 0, .col = 0 };
 // Start position
 static pos_2d start_pos = { .row = 0, .col = 0 };
+// End position
+static pos_2d end_pos = { .row = 0, .col = 0 };
 
 static void redraw_normal(line_data *line);
 static void redraw_obscured(line_data *line);
 static void move_to_pos_normal(line_data *line, uint32_t pos);
 static void move_to_pos_obscured(line_data *line, uint32_t pos);
+static pos_2d linear_offset_to_2d(pos_2d origin, uint32_t pos);
 static bool query_size(pos_2d *buf);
 static bool query_cursor(pos_2d *buf);
-static bool move_cursor_2d(const pos_2d *location);
+static bool move_cursor_2d(pos_2d location);
 
-void nrl_render_init(nrl_echo_mode mode, int echo_file) {
+bool nrl_render_init(nrl_echo_mode mode, int echo_file) {
 	echo_mode = mode;
 	last_rendered_width = 0;
-	cursor_cap = nrl_cursor_capability();
+	term_smart = nrl_term_is_smart();
 	echo_fd = echo_file;
 
-	query_size(&term_size);
+	// Figure out start cursor position & terminal size
+	if (term_smart) {
+		if (!query_cursor(&cursor_pos) ||
+			!query_size(&term_size)) {
+			return false;
+		}
+		start_pos = cursor_pos;
+	}
+
+	return true;
 }
 
 void nrl_render_notify_resize(void) {
@@ -94,6 +108,8 @@ void nrl_render_redraw(line_data *line) {
 }
 
 void nrl_render_sync_cursors(line_data *line) {
+	assert(term_smart);
+
 	switch (echo_mode) {
 	case NRL_ECHO_ON:
 		move_to_pos_normal(line, line->cursor);
@@ -114,7 +130,7 @@ void nrl_render_sync_cursors(line_data *line) {
  * @param[in] line - Line data.
  */
 static void redraw_normal(line_data *line) {
-	if (!cursor_cap) {
+	if (!term_smart) {
 		// On dumb terminals, only echo the unprinted chars
 		char *data = utf8_encode(line->buffer.data + line->render_cursor);
 		nrl_io_write(data, strlen(data));
@@ -158,7 +174,7 @@ static void redraw_normal(line_data *line) {
  * @param[in] line - Line data.
  */
 static void redraw_obscured(line_data *line) {
-	if (!cursor_cap) {
+	if (!term_smart) {
 		// On dumb terminals, just add the new characters
 		for (uint32_t i = 0; i < line->buffer.count - 1 - line->render_cursor;
 			 i++) {
@@ -200,27 +216,31 @@ static void redraw_obscured(line_data *line) {
  * @param[in] pos - Desired position.
  */
 static void move_to_pos_normal(line_data *line, uint32_t pos) {
+	int32_t move_width = 0;
 	bool dir_fwd = ((int32_t)pos - (int32_t)line->render_cursor) > 0;
+
 	while (line->render_cursor != pos) {
 		// Get width of character we are stepping over
 		uint32_t step_idx
 			= dir_fwd ? line->render_cursor : line->render_cursor - 1;
 		const uchar *step = vec_at(&line->buffer, step_idx);
+
 		int width = ucwidth(*step);
 		assert(width != -1);
-
-		// Move to the appropriate direction
-		for (uint32_t i = 0; i < (uint32_t)width; i++) {
-			nrl_io_write_escape(dir_fwd ? TIO_CURSOR_RIGHT : TIO_CURSOR_LEFT);
-		}
 
 		// Update cursor
 		if (dir_fwd) {
 			line->render_cursor++;
+			move_width += width;
 		} else {
 			line->render_cursor--;
+			move_width -= width;
 		}
 	}
+
+	pos_2d new_pos = linear_offset_to_2d(cursor_pos, move_width);
+	move_cursor_2d(new_pos);
+	cursor_pos = new_pos;
 }
 
 /**
@@ -231,15 +251,25 @@ static void move_to_pos_normal(line_data *line, uint32_t pos) {
  */
 static void move_to_pos_obscured(line_data *line, uint32_t pos) {
 	int32_t offset = (int32_t)pos - (int32_t)line->render_cursor;
-	bool dir_fwd = offset > 0;
-	uint32_t offset_abs = dir_fwd ? (uint32_t)offset : (uint32_t)(-offset);
 
-	// All characters are 1 wide
-	for (uint32_t i = 0; i < offset_abs; i++) {
-		nrl_io_write_escape(dir_fwd ? TIO_CURSOR_RIGHT : TIO_CURSOR_LEFT);
-	}
+	pos_2d new_pos = linear_offset_to_2d(cursor_pos, offset);
+	move_cursor_2d(new_pos);
+	cursor_pos = new_pos;
+}
 
-	line->render_cursor = pos;
+/**
+ * @brief Convert linear offset from origin to a 2D coordinate.
+ *
+ * @param[in] origin - 2D origin coordinate.
+ * @param[in] pos - Linear offset.
+ * @return 2D coordinate pointing to desired position.
+ */
+static pos_2d linear_offset_to_2d(pos_2d origin, uint32_t pos) {
+	pos_2d p = {
+		.row = origin.row + pos / term_size.col,
+		.col = (origin.col + pos) % term_size.col,
+	};
+	return p;
 }
 
 /**
@@ -284,7 +314,7 @@ static bool query_size(pos_2d *buf) {
 
 	// Check the cursor position after moving it all the way to the end
 	pos_2d end_pos = { .row = 9999, .col = 9999 };
-	if (!move_cursor_2d(&end_pos)) {
+	if (!move_cursor_2d(end_pos)) {
 		return false;
 	}
 	if (!query_cursor(buf)) {
@@ -292,7 +322,7 @@ static bool query_size(pos_2d *buf) {
 	}
 
 	// Restore old position
-	if (!move_cursor_2d(&saved_pos)) {
+	if (!move_cursor_2d(saved_pos)) {
 		return false;
 	}
 
@@ -348,15 +378,20 @@ static bool query_cursor(pos_2d *buf) {
  * @return true - Request succeeded.\n
  *         false - Request failed.
  */
-static bool move_cursor_2d(const pos_2d *location) {
+static bool move_cursor_2d(pos_2d location) {
 	const char *format = nrl_lookup_special(TIS_CURSOR_ADDRESS);
 	char *move_cmd
-		= nrl_terminfo_string_format(format, 2, location->row, location->col);
+		= nrl_terminfo_string_format(format, 2, location.row, location.col);
 
 	if (!nrl_io_write(move_cmd, strlen(move_cmd))) {
 		return false;
 	}
 	free(move_cmd);
 
-	return nrl_io_flush();
+	if (!nrl_io_flush()) {
+		return false;
+	}
+
+	cursor_pos = location;
+	return true;
 }

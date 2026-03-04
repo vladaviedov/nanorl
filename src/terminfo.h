@@ -119,9 +119,9 @@ const char *nrl_lookup_output(terminfo_output id);
 const char *nrl_lookup_special(terminfo_special id);
 
 /**
- * @brief Check the cursor movement is availiable on this terminal.
+ * @brief Check if the terminal should be treated as "smart" or "dumb"
  *
- * @return true - Can move cursor.\n
- *         false - Cannot move cursor.
+ * @return true - Enough capabilities enabled for cursor movement.\n
+ *         false - Should be treated as "dumb".
  */
-bool nrl_cursor_capability(void);
+bool nrl_term_is_smart(void);

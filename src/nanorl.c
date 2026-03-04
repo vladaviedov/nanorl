@@ -279,7 +279,6 @@ static bool init(const nrl_config *config) {
 	// IO initialization
 	nrl_io_echo_state(true);
 	nrl_io_init(config->read_file, config->echo_file, config->preload);
-	nrl_render_init(config->echo_mode, config->echo_file);
 	if (!config->assume_smkx) {
 		if (!nrl_io_write_escape(TIO_KEYPAD_XMIT)) {
 			return false;
@@ -301,7 +300,15 @@ static bool init(const nrl_config *config) {
 #endif // CUSTOM_ESCAPES
 
 	nrl_io_echo_state(config->echo_mode != NRL_ECHO_OFF);
-	return nrl_io_flush();
+	if (!nrl_io_flush()) {
+		return false;
+	}
+
+	// Needs to run after IO init is complete & prompt is printed. This hands
+	// over the control of the terminal fully to the renderer. Other parts of
+	// the code MUST NOT directly write to to echo file from this point onwards
+	// until deinit.
+	return nrl_render_init(config->echo_mode, config->echo_file);
 }
 
 /**

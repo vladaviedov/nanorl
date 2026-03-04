@@ -174,8 +174,9 @@ const char *nrl_lookup_special(terminfo_special id) {
 	return specials[id];
 }
 
-bool nrl_cursor_capability(void) {
-	return outputs[TII_KEY_LEFT] != NULL && outputs[TII_KEY_RIGHT] != NULL;
+bool nrl_term_is_smart(void) {
+	return outputs[TII_KEY_LEFT] != NULL && outputs[TII_KEY_RIGHT] != NULL
+	   && outputs[TIS_CURSOR_ADDRESS] != NULL;
 }
 
 /** Static */
