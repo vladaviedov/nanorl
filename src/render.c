@@ -258,10 +258,19 @@ static void move_to_pos_obscured(line_data *line, uint32_t pos) {
  */
 static pos_2d linear_offset_to_2d(pos_2d origin, int32_t pos) {
 	int32_t linear_origin = origin.row * term_size.col + origin.col;
-	int32_t linear_p = linear_origin + pos;
+	int32_t linear_p = (int32_t)linear_origin + pos;
+
+	// Fallback condition that happens on row overflow
+	// This keeps the rendered string more or less sane looking
+	// TODO: implement proper vertical scroll handling
+	if (linear_p < 0) {
+		pos_2d p = { .row = 0, .col = 0 };
+		return p;
+	}
+
 	pos_2d p = {
-		.row = linear_p / term_size.col,
-		.col = linear_p % term_size.col,
+		.row = (uint32_t)linear_p / term_size.col,
+		.col = (uint32_t)linear_p % term_size.col,
 	};
 
 	return p;
