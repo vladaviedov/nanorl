@@ -87,6 +87,12 @@ void nrl_render_redraw(line_data *line) {
 	uchar null_char = 0;
 	vec_push(&line->buffer, &null_char);
 
+	// On sigwinch, need to reinit the positioning
+	if (resize_flag && term_smart && echo_mode != NRL_ECHO_OFF) {
+		query_cursor(&cursor_pos);
+		query_size(&term_size);
+	}
+
 	switch (echo_mode) {
 	case NRL_ECHO_ON:
 		redraw_normal(line);
@@ -102,6 +108,7 @@ void nrl_render_redraw(line_data *line) {
 	vec_erase(&line->buffer, line->buffer.count - 1, NULL);
 
 	line->dirty = false;
+	resize_flag = false;
 	nrl_io_flush();
 }
 
