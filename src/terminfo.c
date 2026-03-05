@@ -2,7 +2,7 @@
  * @file terminfo.c
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
- * @date 2024-2025
+ * @date 2024-2026
  * @license LGPLv3.0
  * @brief terminfo parser.
  */
@@ -176,7 +176,7 @@ const char *nrl_lookup_special(terminfo_special id) {
 
 bool nrl_term_is_smart(void) {
 	return outputs[TII_KEY_LEFT] != NULL && outputs[TII_KEY_RIGHT] != NULL
-	   && outputs[TIS_CURSOR_ADDRESS] != NULL;
+		   && outputs[TIS_CURSOR_ADDRESS] != NULL;
 }
 
 /** Static */

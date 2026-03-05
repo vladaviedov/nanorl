@@ -49,14 +49,12 @@ static pos_2d term_size = { .row = 0, .col = 0 };
 static pos_2d cursor_pos = { .row = 0, .col = 0 };
 // Start position
 static pos_2d start_pos = { .row = 0, .col = 0 };
-// End position
-static pos_2d end_pos = { .row = 0, .col = 0 };
 
 static void redraw_normal(line_data *line);
 static void redraw_obscured(line_data *line);
 static void move_to_pos_normal(line_data *line, uint32_t pos);
 static void move_to_pos_obscured(line_data *line, uint32_t pos);
-static pos_2d linear_offset_to_2d(pos_2d origin, uint32_t pos);
+static pos_2d linear_offset_to_2d(pos_2d origin, int32_t pos);
 static bool query_size(pos_2d *buf);
 static bool query_cursor(pos_2d *buf);
 static bool move_cursor_2d(pos_2d location);
@@ -69,8 +67,7 @@ bool nrl_render_init(nrl_echo_mode mode, int echo_file) {
 
 	// Figure out start cursor position & terminal size
 	if (term_smart) {
-		if (!query_cursor(&cursor_pos) ||
-			!query_size(&term_size)) {
+		if (!query_cursor(&cursor_pos) || !query_size(&term_size)) {
 			return false;
 		}
 		start_pos = cursor_pos;
@@ -146,7 +143,12 @@ static void redraw_normal(line_data *line) {
 
 	// Print line data
 	nrl_io_write(data, len);
+
+	// Recompute position
 	line->render_cursor = line->buffer.count - 1;
+	int wr_width = ucswidth(line->buffer.data, line->buffer.count - 1);
+	assert(wr_width != -1);
+	cursor_pos = linear_offset_to_2d(cursor_pos, wr_width);
 
 	// Account for erased characters
 	int32_t to_erase = (int32_t)last_rendered_width - (line->buffer.count - 1);
@@ -154,16 +156,8 @@ static void redraw_normal(line_data *line) {
 		nrl_io_write(" ", 1);
 	}
 
-	// Go back to end of string: can't use move to pos here
-	for (int32_t i = 0; i < to_erase; i++) {
-		nrl_io_write_escape(TIO_CURSOR_LEFT);
-	}
-
-	// Update for next cycle
-	int width = ucswidth(line->buffer.data, line->buffer.count - 1);
-	assert(width != -1);
-	last_rendered_width = width;
-
+	// Update for next cycle & move to line cursor
+	last_rendered_width = wr_width;
 	move_to_pos_normal(line, line->cursor);
 	free(data);
 }
@@ -187,10 +181,14 @@ static void redraw_obscured(line_data *line) {
 	move_to_pos_obscured(line, 0);
 
 	// Print line data
-	for (uint32_t i = 0; i < line->buffer.count - 1; i++) {
+	uint32_t wr_width = line->buffer.count - 1;
+	for (uint32_t i = 0; i < wr_width; i++) {
 		nrl_io_write("*", 1);
 	}
-	line->render_cursor = line->buffer.count - 1;
+
+	// Recompute position
+	line->render_cursor = wr_width;
+	cursor_pos = linear_offset_to_2d(cursor_pos, wr_width);
 
 	// Account for erased characters
 	int32_t to_erase = (int32_t)last_rendered_width - (line->buffer.count - 1);
@@ -198,14 +196,8 @@ static void redraw_obscured(line_data *line) {
 		nrl_io_write(" ", 1);
 	}
 
-	// Go back to end of string: can't use move to pos here
-	for (int32_t i = 0; i < to_erase; i++) {
-		nrl_io_write_escape(TIO_CURSOR_LEFT);
-	}
-
-	// Update for next cycle
+	// Update for next cycle & move to line cursor
 	last_rendered_width = line->render_cursor;
-
 	move_to_pos_obscured(line, line->cursor);
 }
 
@@ -238,9 +230,7 @@ static void move_to_pos_normal(line_data *line, uint32_t pos) {
 		}
 	}
 
-	pos_2d new_pos = linear_offset_to_2d(cursor_pos, move_width);
-	move_cursor_2d(new_pos);
-	cursor_pos = new_pos;
+	move_cursor_2d(linear_offset_to_2d(cursor_pos, move_width));
 }
 
 /**
@@ -251,10 +241,7 @@ static void move_to_pos_normal(line_data *line, uint32_t pos) {
  */
 static void move_to_pos_obscured(line_data *line, uint32_t pos) {
 	int32_t offset = (int32_t)pos - (int32_t)line->render_cursor;
-
-	pos_2d new_pos = linear_offset_to_2d(cursor_pos, offset);
-	move_cursor_2d(new_pos);
-	cursor_pos = new_pos;
+	move_cursor_2d(linear_offset_to_2d(cursor_pos, offset));
 }
 
 /**
@@ -264,11 +251,14 @@ static void move_to_pos_obscured(line_data *line, uint32_t pos) {
  * @param[in] pos - Linear offset.
  * @return 2D coordinate pointing to desired position.
  */
-static pos_2d linear_offset_to_2d(pos_2d origin, uint32_t pos) {
+static pos_2d linear_offset_to_2d(pos_2d origin, int32_t pos) {
+	int32_t linear_origin = origin.row * term_size.col + origin.col;
+	int32_t linear_p = linear_origin + pos;
 	pos_2d p = {
-		.row = origin.row + pos / term_size.col,
-		.col = (origin.col + pos) % term_size.col,
+		.row = linear_p / term_size.col,
+		.col = linear_p % term_size.col,
 	};
+
 	return p;
 }
 

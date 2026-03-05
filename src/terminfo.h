@@ -2,7 +2,7 @@
  * @file terminfo.h
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
- * @date 2024-2025
+ * @date 2024-2026
  * @license LGPLv3.0
  * @brief terminfo parser.
  */
