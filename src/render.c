@@ -58,6 +58,7 @@ static pos_2d linear_offset_to_2d(pos_2d origin, int32_t pos);
 static bool query_size(pos_2d *buf);
 static bool query_cursor(pos_2d *buf);
 static bool move_cursor_2d(pos_2d location);
+static void handle_scroll(void);
 
 bool nrl_render_init(nrl_echo_mode mode, int echo_file) {
 	echo_mode = mode;
@@ -149,6 +150,7 @@ static void redraw_normal(line_data *line) {
 	int wr_width = ucswidth(line->buffer.data, line->buffer.count - 1);
 	assert(wr_width != -1);
 	cursor_pos = linear_offset_to_2d(cursor_pos, wr_width);
+	handle_scroll();
 
 	// Account for erased characters
 	int32_t to_erase = (int32_t)last_rendered_width - (line->buffer.count - 1);
@@ -189,6 +191,7 @@ static void redraw_obscured(line_data *line) {
 	// Recompute position
 	line->render_cursor = wr_width;
 	cursor_pos = linear_offset_to_2d(cursor_pos, wr_width);
+	handle_scroll();
 
 	// Account for erased characters
 	int32_t to_erase = (int32_t)last_rendered_width - (line->buffer.count - 1);
@@ -384,4 +387,25 @@ static bool move_cursor_2d(pos_2d location) {
 
 	cursor_pos = location;
 	return true;
+}
+
+/**
+ * @brief Handle any weirdness that comes from terminal scrolling.
+ */
+static void handle_scroll(void) {
+	int32_t rows_scrolled = cursor_pos.row - term_size.row + 1;
+	if (rows_scrolled <= 0) {
+		return;
+	}
+
+	// This forces scrolling at the end of the line. It's a hacky way to do it,
+	// but it works for now. TODO: refactor?
+	if (cursor_pos.col == 0) {
+		nrl_io_write("\n", 1);
+		nrl_io_flush();
+	}
+
+	// All coordinates are shifted by the scrolled amount
+	start_pos.row -= rows_scrolled;
+	cursor_pos.row -= rows_scrolled;
 }
