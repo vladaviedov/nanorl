@@ -67,7 +67,7 @@ bool nrl_render_init(nrl_echo_mode mode, int echo_file) {
 	echo_fd = echo_file;
 
 	// Figure out start cursor position & terminal size
-	if (term_smart) {
+	if (term_smart && echo_mode != NRL_ECHO_OFF) {
 		if (!query_cursor(&cursor_pos) || !query_size(&term_size)) {
 			return false;
 		}
@@ -244,6 +244,8 @@ static void move_to_pos_normal(line_data *line, uint32_t pos) {
  */
 static void move_to_pos_obscured(line_data *line, uint32_t pos) {
 	int32_t offset = (int32_t)pos - (int32_t)line->render_cursor;
+	line->render_cursor = (uint32_t)((int32_t)line->render_cursor + offset);
+
 	move_cursor_2d(linear_offset_to_2d(cursor_pos, offset));
 }
 
