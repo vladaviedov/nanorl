@@ -6,11 +6,13 @@ export BUILD=$(PWD)/build
 VERSION='"v2-pre0.1"'
 
 export CC=gcc
+CFLAGS_CONFIG?=
 export CFLAGS=-std=c99 \
 	-fPIC \
 	-I$(PWD)/include \
 	-I$(BUILD)/include \
-	-DNRL_VERSION=$(VERSION)
+	-DNRL_VERSION=$(VERSION) \
+	$(CFLAGS_CONFIG)
 CFLAGS_RELEASE=-O2 -w
 CFLAGS_DEBUG=-Wall -Wextra -g
 
