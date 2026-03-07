@@ -78,3 +78,18 @@
 #ifndef CUSTOM_ESCAPES
 #define CUSTOM_ESCAPES 1
 #endif // CUSTOM_ESCAPES
+
+/**
+ * @def PATCH_XTERM_OOB_BACKSPACE
+ * Enables a hidden Ctrl+H -> Backspace alias on xterm terminals.
+ *
+ * Some xterm terminals (including xterm itself) will send Ctrl+H on hitting the
+ * backspace key for backwards compatibility with old Unixes. This archaism
+ * breaks terminfo compilance causing backspace to break entirely in nanorl.
+ *
+ * This behavior can be disabled in the xterm configuration if the user chooses
+ * to do so. Meanwhile, this patch fixes backspaces in out-of-the-box xterm.
+ */
+#ifndef PATCH_XTERM_OOB_BACKSPACE
+#define PATCH_XTERM_OOB_BACKSPACE 1
+#endif // PATCH_XTERM_OOB_BACKSPACE

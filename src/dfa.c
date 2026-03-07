@@ -2,7 +2,7 @@
  * @file dfa.c
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
  * @version v2-pre0.1
- * @date 2024-2025
+ * @date 2024-2026
  * @license LGPLv3.0
  * @brief Simplified DFA for escape sequences.
  */
@@ -12,6 +12,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+
+#if PATCH_XTERM_OOB_BACKSPACE == 1
+#include <string.h>
+#endif // PATCH_XTERM_OOB_BACKSPACE
 
 #include "terminfo.h"
 
@@ -73,6 +77,14 @@ void nrl_dfa_build(void) {
 		}
 	}
 
+#if PATCH_XTERM_OOB_BACKSPACE == 1
+	const char *env_term = getenv("TERM");
+	if (strstr(env_term, "xterm")) {
+		dfa_acceptor acceptor = { .input = TII_KEY_BACKSPACE };
+		dfa_insert("\010", acceptor, false);
+	}
+#endif // PATCH_XTERM_OOB_BACKSPACE
+
 	for (uint32_t i = 0; i < TIC_COUNT; i++) {
 		const char *sequence = nrl_lookup_custom(i);
 		if (sequence != NULL) {
@@ -80,6 +92,7 @@ void nrl_dfa_build(void) {
 			dfa_insert(sequence, acceptor, true);
 		}
 	}
+#endif // CUSTOM_ESCAPES
 }
 
 dfa_result nrl_dfa_parse(char (*next_char)(), dfa_acceptor *accept_buf) {
