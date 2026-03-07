@@ -85,6 +85,7 @@ void nrl_dfa_build(void) {
 	}
 #endif // PATCH_XTERM_OOB_BACKSPACE
 
+#if CUSTOM_ESCAPES == 1
 	for (uint32_t i = 0; i < TIC_COUNT; i++) {
 		const char *sequence = nrl_lookup_custom(i);
 		if (sequence != NULL) {

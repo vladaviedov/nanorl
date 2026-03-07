@@ -309,12 +309,15 @@ static bool parse(FILE *terminfo) {
 	// Lookup all relevant capability
 	lookup_strings(strings, strings_table, input_seq_indices, TII_COUNT,
 				   inputs);
-	lookup_strings(strings, strings_table, custom_seq_indices, TIC_COUNT,
-				   customs);
 	lookup_strings(strings, strings_table, output_seq_indices, TIO_COUNT,
 				   outputs);
 	lookup_strings(strings, strings_table, special_seq_indices, TIS_COUNT,
 				   specials);
+
+#if CUSTOM_ESCAPES == 1
+	lookup_strings(strings, strings_table, custom_seq_indices, TIC_COUNT,
+				   customs);
+#endif // CUSTOM_ESCAPES
 
 	return true;
 }
