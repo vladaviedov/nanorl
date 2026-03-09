@@ -103,6 +103,15 @@ ssize_t nrl_io_raw_read(char *buffer, uint32_t buf_size) {
 }
 
 bool nrl_io_parse_control(uchar c, input_buf *buffer) {
+	// Special case: backspace (will not show up normally here)
+	if (c == 0x7f) {
+		buffer->text[0] = '^';
+		buffer->text[1] = '?';
+		buffer->length = 2;
+
+		return true;
+	}
+
 	// C0 codes are below 0x20
 	if (c >= 0x20) {
 		return false;

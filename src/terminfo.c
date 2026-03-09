@@ -127,6 +127,11 @@ static void lookup_strings(const int16_t *strings,
 						   uint32_t length,
 						   char **buf);
 
+#if DEBUG == 1
+static void dump_table(char **table, uint32_t len);
+static void dump_tables(const char *term);
+#endif // DEBUG
+
 bool nrl_load_terminfo(void) {
 	if (attempted_load) {
 		return load_result;
@@ -145,6 +150,10 @@ bool nrl_load_terminfo(void) {
 		nrl_fl_xterm((char **)&inputs, (char **)&customs, (char **)&outputs,
 					 (char **)&specials);
 		load_result = true;
+#if DEBUG == 1
+		dump_tables(env_term);
+#endif // DEBUG
+
 		return true;
 	}
 #endif // FASTLOAD
@@ -155,6 +164,10 @@ bool nrl_load_terminfo(void) {
 	}
 
 	load_result = parse(terminfo);
+#if DEBUG == 1
+	dump_tables(env_term);
+#endif // DEBUG
+
 	return load_result;
 }
 
@@ -347,3 +360,71 @@ static void lookup_strings(const int16_t *strings,
 		}
 	}
 }
+
+#if DEBUG == 1
+#include <c-utils/uchar.h>
+#include <c-utils/ustring.h>
+#include "io.h"
+
+/**
+ * @brief Dump a stored terminfo table.
+ *
+ * @param[in] term - Terminal name.
+ */
+static void dump_table(char **table, uint32_t len) {
+	for (uint32_t i = 0; i < len; i++) {
+		const char *raw = table[i];
+		if (raw == NULL) {
+			printf("NULL,\n");
+			continue;
+		}
+
+		uchar *conv = utf8_decode(raw, NULL);
+
+		printf("\"");
+		uint32_t str_len = ustrlen(conv);
+		for (uint32_t j = 0; j < str_len; j++) {
+			input_buf buf;
+			bool is_ctrl = nrl_io_parse_control(conv[j], &buf);
+			if (is_ctrl) {
+				putchar(buf.text[0]);
+				putchar(buf.text[1]);
+			} else {
+				putchar((char)conv[j]);
+			}
+		}
+		printf("\",\n");
+	}
+}
+
+/**
+ * @brief Dump loaded terminfo results.
+ *
+ * @param[in] term - Terminal name.
+ */
+static void dump_tables(const char *term) {
+	printf("Terminal: %s\n", term);
+
+	printf("Inputs table\n");
+	printf("============\n");
+	dump_table(inputs, TII_COUNT);
+	printf("============\n");
+
+	printf("Outputs table\n");
+	printf("============\n");
+	dump_table(outputs, TIO_COUNT);
+	printf("============\n");
+
+	printf("Specials table\n");
+	printf("============\n");
+	dump_table(specials, TIS_COUNT);
+	printf("============\n");
+
+#if CUSTOM_ESCAPES == 1
+	printf("Customs table\n");
+	printf("============\n");
+	dump_table(customs, TIC_COUNT);
+	printf("============\n");
+#endif // CUSTOM_ESCAPES
+}
+#endif // DEBUG
