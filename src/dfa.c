@@ -152,7 +152,10 @@ void print_helper(const dfa_node *node, uint32_t indent) {
 }
 
 void nrl_dfa_print(void) {
+	printf("DFA Tree\n");
+	printf("============\n");
 	print_helper(&root, 0);
+	printf("============\n");
 }
 #endif // DEBUG
 
