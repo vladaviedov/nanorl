@@ -30,9 +30,11 @@ static const char *xterm_specials_stub[TIS_COUNT] = {
 
 #if CUSTOM_ESCAPES == 1
 static const char *xterm_customs_stub[TIC_COUNT] = {
-	"\033OA",
-	"\033OB",
-	"\t",
+	NULL,        NULL,        NULL,       NULL,       "\033OB",   NULL,
+	NULL,        NULL,        NULL,       "\033OP",   "\033OQ",   "\033OR",
+	"\033OS",    "\033[15~",  "\033[17~", "\033[18~", "\033[19~", "\033[20~",
+	"\033[21~",  "\033[2~",   NULL,       NULL,       "\033[6~",  "\033[5~",
+	"\033[1;2B", "\033[1;2A", NULL,       "\033OA",   "\t",
 };
 #endif // CUSTOM_ESCAPES
 

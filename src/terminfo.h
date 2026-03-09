@@ -37,7 +37,7 @@ typedef nrl_escape terminfo_custom;
  * @def TIC_COUNT
  * Total entries in @ref nrl_escape.
  */
-#define TIC_COUNT 3
+#define TIC_COUNT 29
 
 /**
  * @enum terminfo_output

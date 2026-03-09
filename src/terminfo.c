@@ -80,8 +80,34 @@ static const uint32_t input_seq_indices[] = {
  * @note Reference: ncurses source 'include/Caps' or generated 'term.h'
  */
 static const uint32_t custom_seq_indices[] = {
-	87u,  // key_up
+	56u,  // key_catab
+	57u,  // key_clear
+	58u,  // key_ctab
+	60u,  // key_dl
 	61u,  // key_down
+	62u,  // key_eic
+	63u,  // key_eol
+	64u,  // key_eos
+	65u,  // key_f0
+	66u,  // key_f1
+	68u,  // key_f2
+	69u,  // key_f3
+	70u,  // key_f4
+	71u,  // key_f5
+	72u,  // key_f6
+	73u,  // key_f7
+	74u,  // key_f8
+	75u,  // key_f9
+	67u,  // key_f10
+	77u,  // key_ic
+	78u,  // key_il
+	80u,  // key_ll
+	81u,  // key_npage
+	82u,  // key_ppage
+	84u,  // key_sf
+	85u,  // key_sr
+	86u,  // key_stab
+	87u,  // key_up
 	134u, // tab
 };
 
@@ -364,6 +390,7 @@ static void lookup_strings(const int16_t *strings,
 #if DEBUG == 1
 #include <c-utils/uchar.h>
 #include <c-utils/ustring.h>
+
 #include "io.h"
 
 /**
