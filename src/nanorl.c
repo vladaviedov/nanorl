@@ -78,7 +78,7 @@ static const nrl_config default_conf = {
 		*var_ptr = val;                                                        \
 	}
 
-static void sigwinch_handler(int code);
+static void sigwinch_handler();
 static void generic_handler(int code);
 static bool check_args(const nrl_config *config);
 static bool init(const nrl_config *config);
@@ -189,7 +189,7 @@ nrl_config nrl_default_config(void) {
  *
  * @param[in] code - Signal code.
  */
-static void sigwinch_handler(int code) {
+static void sigwinch_handler() {
 	nrl_render_notify_resize();
 }
 
