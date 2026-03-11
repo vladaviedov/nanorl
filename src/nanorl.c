@@ -7,6 +7,7 @@
  * @brief Small line editing library.
  */
 #define _POSIX_C_SOURCE 200809L
+#define _XOPEN_SOURCE 700 // Use SIGWINCH if available
 #include "nanorl.h"
 
 #include <assert.h>
@@ -254,6 +255,7 @@ static bool init(const nrl_config *config) {
 	}
 
 	// Setup sigwinch signal
+#if defined(SIGWINCH)
 	struct sigaction nrl_sigwinch_sa;
 	sigemptyset(&nrl_sigwinch_sa.sa_mask);
 	nrl_sigwinch_sa.sa_flags = SA_RESTART;
@@ -262,6 +264,7 @@ static bool init(const nrl_config *config) {
 	if (sigaction(SIGWINCH, &nrl_sigwinch_sa, &old_sigwinch_sa) < 0) {
 		return false;
 	}
+#endif // defined(SIGWINCH)
 
 	// Setup other signals
 	struct sigaction nrl_sa;
@@ -333,10 +336,15 @@ static bool deinit(const nrl_config *config) {
 	if (sigaction(SIGHUP, &old_sighup_sa, NULL) < 0
 		|| sigaction(SIGINT, &old_sigint_sa, NULL) < 0
 		|| sigaction(SIGTERM, &old_sigterm_sa, NULL) < 0
-		|| sigaction(SIGQUIT, &old_sigquit_sa, NULL) < 0
-		|| sigaction(SIGWINCH, &old_sigwinch_sa, NULL) < 0) {
+		|| sigaction(SIGQUIT, &old_sigquit_sa, NULL) < 0) {
 		return false;
 	}
+
+#if defined(SIGWINCH)
+	if (sigaction(SIGWINCH, &old_sigwinch_sa, NULL) < 0) {
+		return false;
+	}
+#endif // defined(SIGWINCH)
 
 	// Delete secure data remains
 	if (config->echo_mode != NRL_ECHO_ON) {
