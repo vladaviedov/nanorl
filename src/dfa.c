@@ -1,7 +1,7 @@
 /**
  * @file dfa.c
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
- * @version v2-pre0.1
+ * @version 2.0.0
  * @date 2024-2026
  * @license LGPLv3.0
  * @brief Simplified DFA for escape sequences.
