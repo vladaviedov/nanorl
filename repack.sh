@@ -6,5 +6,5 @@ shift 2
 
 for sublib in $@; do
 	name=$(basename $sublib .a)
-	ar -t $sublib | sed -e "s~^~$obj_dir/~" | xargs ar rvsc $out
+	ar -t $sublib | grep '\.o$' | sed -e "s~^~$obj_dir/~" | xargs ar rvsc $out
 done
