@@ -47,8 +47,6 @@ volatile sig_atomic_t resize_flag = false;
 static pos_2d term_size = { .row = 0, .col = 0 };
 // In-memory cursor position
 static pos_2d cursor_pos = { .row = 0, .col = 0 };
-// Start position
-static pos_2d start_pos = { .row = 0, .col = 0 };
 
 static void redraw_normal(line_data *line);
 static void redraw_obscured(line_data *line);
@@ -71,7 +69,6 @@ bool nrl_render_init(nrl_echo_mode mode, int echo_file) {
 		if (!query_cursor(&cursor_pos) || !query_size(&term_size)) {
 			return false;
 		}
-		start_pos = cursor_pos;
 	}
 
 	return true;
@@ -434,6 +431,5 @@ static void handle_scroll(void) {
 	}
 
 	// All coordinates are shifted by the scrolled amount
-	start_pos.row -= rows_scrolled;
 	cursor_pos.row -= rows_scrolled;
 }
