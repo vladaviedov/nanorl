@@ -358,12 +358,22 @@ static bool query_cursor(pos_2d *buf) {
 		return false;
 	}
 
+	// Lookup CPR response format
+	const char *cpr_res = nrl_lookup_special(TIS_USER6);
+	char last_char = cpr_res[strlen(cpr_res) - 1];
+
 	// Read in CPR response
 	char res_buf[CPR_RES_BUF_SIZE];
-	ssize_t res_size = nrl_io_raw_read(res_buf, CPR_RES_BUF_SIZE);
-	if (res_size < 0) {
-		return false;
-	}
+	uint32_t res_size = 0;
+	do {
+		ssize_t read_size
+			= nrl_io_raw_read(res_buf + res_size, CPR_RES_BUF_SIZE);
+		if (read_size < 0) {
+			return false;
+		}
+
+		res_size += read_size;
+	} while (res_buf[res_size - 1] != last_char);
 	assert(res_size != CPR_RES_BUF_SIZE);
 	res_buf[res_size] = '\0';
 
