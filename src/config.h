@@ -1,7 +1,7 @@
 /**
  * @file config.h
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
- * @version 2.0.0
+ * @version 2.0.1
  * @date 2024-2026
  * @license LGPLv3.0
  * @brief Configuration macros.

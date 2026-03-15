@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.1
+
+**Bug fixes**:
+
+- Fixed buffer underflow during cursor position requests on hardware terminals
+- Removed unused terminfo entries and variables
+
 ## 2.0.0
 
 - *meta*: Split from c-utils
