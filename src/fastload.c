@@ -20,7 +20,8 @@ static const char *xterm_inputs_stub[TII_COUNT] = {
 	"\033OD", "\033OC", "\177", "\033OH", "\033OF", "\033[3~",
 };
 static const char *xterm_outputs_stub[TIO_COUNT] = {
-	"\b", "\033[C", "\n", "\033[A", "\033[?1l\033>", "\033[?1h\033=",
+	"\033[?1l\033>",
+	"\033[?1h\033=",
 };
 static const char *xterm_specials_stub[TIS_COUNT] = {
 	"\033[%i%p1%d;%p2%dH",

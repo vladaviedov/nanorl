@@ -117,10 +117,6 @@ static const uint32_t custom_seq_indices[] = {
  * @note Reference: ncurses source 'include/Caps' or generated 'term.h'
  */
 static const uint32_t output_seq_indices[] = {
-	14u, // cursor_left
-	17u, // cursor_right,
-	11u, // cursor_down
-	19u, // cursor_up
 	88u, // keypad_local
 	89u, // keypad_xmit
 };
