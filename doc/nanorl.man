@@ -1,0 +1,94 @@
+.TH NANORL 3 "April 2026" "nanorl 2.0"
+.SH NAME
+nanorl \- POSIX line editing library
+.SH SYNOPSIS
+.nf
+\fB#include <nanorl/nanorl.h>\fP
+.fi
+.SH DESCRIPTION
+\fBvirsh-ss\fP is a wrapper for the \fBvirsh send-key\fP command which allows
+sending ASCII strings, rather than symbolic character names.
+\fBnanorl\fP (nano readline) is a small line editing library. Unlike
+\fIreadline\fP (GPL) or \fIlibedit\fP (BSD), nanorl does not (internally)
+provide history, completions or editor-specific options.
+.SH PORTABILITY
+\fBnanorl\fP is written for POSIX 2008 and relies on the curses terminfo
+database, although not curses itself.
+
+\fISIGWINCH\fP handling requires X/Open extensions to be implemented, however
+the library does work without them.
+.SH EXAMPLES
+.TP
+\fBStandard usage\fP
+.RS
+.EX
+.eo
+// Get default config and adjust prompt
+nrl_config config = nrl_default_config();
+config.prompt = "enter something: ";
+
+// Call nanorl
+nrl_error error;
+char *input = nanorl(&config, &error);
+
+printf("%s\n", err_to_string(error));
+printf("You typed: %s\n\n", input);
+free(input);
+.ec
+.EE
+.RE
+.TP
+\fBSensitive data input (secrets)\fP
+.RS
+.EX
+.eo
+// Get default config and adjust settings
+nrl_config config = nrl_default_config();
+config.prompt = "input secret: ";
+config.echo_mode = NRL_ECHO_OBSCURED;
+
+// Call nanorl with obscured echo
+nrl_error error;
+char *input = nanorl(&config, &error);
+
+printf("%s\n", err_to_string(error));
+printf("You typed: %s\n\n", input);
+free(input);
+.ec
+.EE
+.RE
+.TP
+\fBPreloading input data\fP
+.RS
+.EX
+.eo
+// Get default config and adjust settings
+nrl_config config = nrl_default_config();
+config.prompt = "edit this text: ";
+config.preload = "hello world";
+
+// Call nanorl
+nrl_error error;
+char *input = nanorl(&config, &error);
+
+printf("%s\n", err_to_string(error));
+printf("You typed: %s\n\n", input);
+free(input);
+.ec
+.EE
+.RE
+.SH "BUG REPORTS"
+Issue tracker: <https://github.com/vladaviedov/nanorl/issues>
+.sp 1
+If you are unable to use the issue tracker, you may mail reports to
+<bugs at vladaviedov dot org>
+.SH COPYRIGHT
+Copyright (C) 2026 Vladyslav Aviedov
+.SH LICENSE
+\fBnanorl\fP is distributed under the terms of the GNU LGPL v3. This is free
+software; see the source for copying conditions. There is NO warranty; not even
+for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.SH "SEE ALSO"
+.nf
+<https://github.com/vladaviedov/nanorl>
+.fi
