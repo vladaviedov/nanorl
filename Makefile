@@ -27,7 +27,7 @@ export TASK=
 
 BUILD_MK=$(PWD)/build.mk
 PREFIX?=/usr
-MAN_SRC=
+MAN_SRC=doc/nanorl.man
 
 # Build tasks
 .PHONY: release
@@ -46,11 +46,10 @@ debug:
 
 .PHONY: install
 install:
-	mkdir -p $(PREFIX)/lib $(PREFIX)/include/nanorl
-	# $(PREFIX)/share/man/man1
+	mkdir -p $(PREFIX)/lib $(PREFIX)/include/nanorl $(PREFIX)/share/man/man3
 	install -Dm755 $(TARGET_SHARED) $(PREFIX)/lib
 	find $(BUILD)/include/nanorl -type f -exec install -Dm644 {} $(PREFIX)/include/nanorl \;
-	# gzip -c $(MAN_SRC) > $(PREFIX)/share/man/man1/mesh.1.gz
+	install -Dm644 $(MAN_SRC) $(PREFIX)/share/man/man3/nanorl.3
 
 .PHONY: clean
 clean:
