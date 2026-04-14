@@ -10,7 +10,7 @@ export CFLAGS=-std=c99 \
 	-I$(BUILD)/include \
 	-DNRL_VERSION=$(VERSION) \
 	$(CFLAGS_CONFIG)
-CFLAGS_RELEASE=-O2 -w
+CFLAGS_RELEASE=-O2 -w -DNDEBUG
 CFLAGS_DEBUG=-Wall -Wextra -g
 
 export AR=ar
