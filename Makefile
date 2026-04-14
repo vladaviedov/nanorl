@@ -46,8 +46,10 @@ debug:
 
 .PHONY: install
 install:
-	mkdir -p $(PREFIX)/bin $(PREFIX)/share/man/man1
-	cp $(TARGET) $(PREFIX)/bin
+	mkdir -p $(PREFIX)/lib $(PREFIX)/include/nanorl
+	# $(PREFIX)/share/man/man1
+	install -Dm755 $(TARGET_SHARED) $(PREFIX)/lib
+	find $(BUILD)/include/nanorl -type f -exec install -Dm644 {} $(PREFIX)/include/nanorl \;
 	# gzip -c $(MAN_SRC) > $(PREFIX)/share/man/man1/mesh.1.gz
 
 .PHONY: clean
