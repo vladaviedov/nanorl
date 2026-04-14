@@ -1,0 +1,38 @@
+# This PKGBUILD is not published to the AUR
+# Maintainer: Vladyslav Aviedov <vladaviedov at protonmail dot com>
+pkgname=nanorl
+pkgver=2.0.2
+pkgrel=1
+pkgdesc="POSIX line editing library"
+arch=('x86_64')
+url='https://github.com/vladaviedov/nanorl'
+license=('GPL-3.0-only')
+depends=()
+makedepends=('git')
+source=("${pkgname}-${pkgver}::git+https://github.com/vladaviedov/nanorl.git#tag=${pkgver}"
+	"c-utils::git+https://github.com/vladaviedov/c-utils.git")
+sha256sums=('SKIP'
+	'SKIP')
+
+prepare() {
+	cd "${pkgname}-${pkgver}"
+	git submodule init
+
+	# c-utils submodule
+	git config submodule.libs/c-utils.url "$srcdir/c-utils"
+	git -c protocol.file.allow=always submodule update
+}
+
+build() {
+	cd "${pkgname}-${pkgver}"
+
+	# nanorl config: disable other OS database paths
+	export CFLAGS_CONFIG="-DTERMINFO_DEBIAN=0 -DTERMINFO_FREEBSD=0 -DTERMINFO_NETBSD=0"
+
+	make release -j"$(nproc)"
+}
+
+package() {
+	cd "${pkgname}-${pkgver}"
+	make install PREFIX="$pkgdir/usr"
+}
