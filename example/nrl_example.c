@@ -86,7 +86,6 @@ static void ex_obscured(void) {
 	printf("%s\n", err_to_string(error));
 	printf("You typed: %s\n\n", input);
 	free(input);
-
 }
 
 /**
