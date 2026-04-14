@@ -1,7 +1,7 @@
 /**
  * @file fastload.c
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
- * @version 2.0.1
+ * @version 2.0.2
  * @date 2024-2026
  * @license LGPLv3.0
  * @brief Terminfo optimization for common terminals.

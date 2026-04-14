@@ -1,7 +1,7 @@
 /**
  * @file escape.h
  * @author Vladyslav Aviedov <vladaviedov at protonmail dot com>
- * @version 2.0.1
+ * @version 2.0.2
  * @date 2025-2026
  * @license LGPLv3.0
  * @brief User escape code configuration.

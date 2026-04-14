@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.2
+
+- *meta*: Write a proper `make install` task
+- *meta*: Add a simple man page
+- *meta*: Disable asserts in release builds
+
 ## 2.0.1
 
 **Bug fixes**:
